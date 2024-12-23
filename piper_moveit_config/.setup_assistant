@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: piper_description
+    relative_path: urdf/piper_description.xacro
+  srdf:
+    relative_path: config/arm.srdf
+  package_settings:
+    author_name: jinm
+    author_email: jinm@honsginke.com
+    generated_timestamp: 1734596743
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
