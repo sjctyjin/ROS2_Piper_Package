@@ -17,6 +17,12 @@ ros2 run transform_example yolov8_detect
 
 啟動座標轉換將yolov8_detect偵測到的坐標系object_frame 轉換到相對於base_link的object_in_base
 
+
+
+#下執行指令
+ros2 service call /trigger_plan std_srvs/srv/Trigger {}
+
+
 5. ros2 run transform_example transform_point
 
 啟動detection_to_moveit將偵測的object_in_base轉換到moveit執行
