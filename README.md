@@ -7,8 +7,8 @@ ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.e
 再啟動剛剛建置的yolov8_detect
 2 . 
 ros2 run transform_example yolov8_detect
-# 2025-03-14加入SAM姿態估測
-.. ros2 run transform_example yolov8_detect_pose
+### 2025-03-14加入SAM分割後 點雲 姿態估測
+ ros2 run transform_example yolov8_detect_pose
 最後啟動piper的xarco，就能得到一開始的結果。
 3. ros2 launch piper_description display_xacro.launch.py
 
