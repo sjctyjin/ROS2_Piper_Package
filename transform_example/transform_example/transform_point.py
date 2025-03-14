@@ -1,8 +1,9 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped,Quaternion
 import tf2_ros
 import numpy as np
+from tf_transformations import quaternion_multiply, quaternion_from_matrix, quaternion_matrix
 
 class TransformObjectToBase(Node):
     def __init__(self):
@@ -25,6 +26,41 @@ class TransformObjectToBase(Node):
 
     def transform_object_to_base(self):
         try:
+            # 直接使用 TF2 的查詢功能獲取從相機到基座的變換
+            self.get_logger().info('嘗試查詢從相機到基座的變換...')
+            transform_base_to_camera = self.tf_buffer.lookup_transform(
+                self.base_frame, self.camera_frame, rclpy.time.Time()
+            )
+
+            # 嘗試獲取物體相對於相機的變換
+            self.get_logger().info('嘗試查詢物體相對於相機的變換...')
+            transform_camera_to_object = self.tf_buffer.lookup_transform(
+                self.camera_frame, self.object_frame, rclpy.time.Time()
+            )
+            # 1. 將相機到物體的變換轉換為矩陣
+            T_camera_to_object = self.transform_to_matrix(transform_camera_to_object)
+
+            # 2. 將基座到相機的變換轉換為矩陣
+            T_base_to_camera = self.transform_to_matrix(transform_base_to_camera)
+
+            # 3. 計算基座到物體的變換矩陣
+            T_base_to_object = np.dot(T_base_to_camera, T_camera_to_object)
+
+            # 4. 從變換矩陣提取位置和姿態
+            position = T_base_to_object[:3, 3]
+            rotation_matrix = T_base_to_object[:3, :3]
+
+            # 從旋轉矩陣計算四元數
+            quaternion = quaternion_from_matrix(T_base_to_object)
+
+            # 5. 廣播物體相對於基座的TF
+            self.broadcast_object_tf(position, quaternion)
+
+            # 輸出結果
+            self.get_logger().info(f"物體位置相對於基座: {position}")
+            self.get_logger().info(f"物體姿態相對於基座(四元數): {quaternion}")
+
+            """ 舊的
             # 1. 取得 object_frame 到 camera_link 的 TF 變換
             transform_camera_to_object = self.tf_buffer.lookup_transform(
                 self.camera_frame, self.object_frame, rclpy.time.Time()
@@ -54,11 +90,12 @@ class TransformObjectToBase(Node):
 
             # 5. 將物體座標轉換到 base_link
             point_base = np.dot(T_base_to_camera, object_point_camera)
-	    # 6. 廣播新的 TF
+	        # 6. 廣播新的 TF
             self.broadcast_object_tf(point_base[:3])
 
             # 輸出結果
             self.get_logger().info(f"Object point in base_link: {point_base[:3]}")
+            """
 
         except Exception as e:
             self.get_logger().error(f"Failed to transform object point: {str(e)}")
@@ -88,7 +125,7 @@ class TransformObjectToBase(Node):
             [2 * x * z - 2 * y * w, 2 * y * z + 2 * x * w, 1 - 2 * x**2 - 2 * y**2]
         ])
         return R
-    def broadcast_object_tf(self, position):
+    def broadcast_object_tf(self, position,quaternion):
         """ 廣播物體的 TF 到 base_link """
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
@@ -101,14 +138,19 @@ class TransformObjectToBase(Node):
         t.transform.translation.z = position[2]
 
         # 假設旋轉為單位四元數 (物體沒有旋轉)
-        t.transform.rotation.x = 0.0
-        t.transform.rotation.y = 0.0
-        t.transform.rotation.z = 0.0
-        t.transform.rotation.w = 1.0
+        # t.transform.rotation.x = 0.0
+        # t.transform.rotation.y = 0.0
+        # t.transform.rotation.z = 0.0
+        # t.transform.rotation.w = 1.0
+        # 旋轉部分（四元數）
+        t.transform.rotation.x = float(quaternion[0])
+        t.transform.rotation.y = float(quaternion[1])
+        t.transform.rotation.z = float(quaternion[2])
+        t.transform.rotation.w = float(quaternion[3])
 
         # 發布 TF
         self.tf_broadcaster.sendTransform(t)
-        self.get_logger().info(f"Published object TF at {position}")
+        self.get_logger().info(f"發布了物體TF，位置: {position}，姿態: {quaternion}")
 
 def main(args=None):
     rclpy.init(args=args)

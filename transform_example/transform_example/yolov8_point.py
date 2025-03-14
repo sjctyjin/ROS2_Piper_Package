@@ -14,12 +14,12 @@ class CameraYoloProcessor(Node):
         super().__init__('camera_yolo_processor')
 
         # YOLO 模型加載
-        self.model = YOLO('yolov8n.pt')  # 替換為你的模型路徑
+        self.model = YOLO('pamu.pt')  # 替換為你的模型路徑
 
         # 訂閱影像和相機參數
-        self.image_sub = self.create_subscription(Image, '/camera/color/image_rect_raw', self.image_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
-        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
+        self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
+        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
 
         self.bridge = CvBridge()
         self.camera_intrinsics = None
@@ -56,14 +56,18 @@ class CameraYoloProcessor(Node):
         print(height,width)
         center_x, center_y = width // 2, height // 2  # 計算中心點
 
-	# 畫水平線
+	    # 畫水平線
         cv2.line(cv_image, (0, center_y), (width, center_y), (255, 255, 255), 2)
 
-	# 畫垂直線
+	    # 畫垂直線
         cv2.line(cv_image, (center_x, 0), (center_x, height), (255, 255, 255), 2)
+        #若無目標物 回歸原點
 
         for detection in detections:
             x1, y1, x2, y2, conf, cls = detection
+            # if cls != 0:
+            #     self.broadcast_tf([0.1, 0.0, 0.195], [0, 0, 0, 1], 'object_frame')
+            #     continue
             pixel_x = int((x1 + x2) / 2)
             pixel_y = int((y1 + y2) / 2)
 
@@ -79,10 +83,12 @@ class CameraYoloProcessor(Node):
             cv2.rectangle(cv_image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
             cv2.circle(cv_image, (pixel_x ,pixel_y), 10, (255, 0, 0), -4)
             cv2.putText(cv_image, f"XYZ: {xyz_camera*100}mm", ((pixel_x-100), pixel_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
             # 假設物體在相機坐標系下的姿態 (此處可替換為更精確的估計)
             rotation_quaternion = [0, 0, 0, 1]  # 單位四元數
-            # 廣播到 TF
-            self.broadcast_tf(xyz_camera, rotation_quaternion, 'object_frame')
+            if cls == 0:
+                # 廣播到 TF
+                self.broadcast_tf(xyz_camera, rotation_quaternion, 'object_frame')
 
         # 顯示影像
         cv2.imshow("YOLO Detection", cv_image)

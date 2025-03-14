@@ -40,12 +40,15 @@ class MoveItTFPlanner(Node):
             # 組合目標 Pose
             target_pose = PoseStamped()
             target_pose.header.frame_id = 'base_link'
-            target_pose.pose.position.x = object_transform.transform.translation.x
+            target_pose.pose.position.x = 0.3
             target_pose.pose.position.y = object_transform.transform.translation.y
             target_pose.pose.position.z = object_transform.transform.translation.z
 
             # 使用 link6 的姿態
             target_pose.pose.orientation = link6_transform.transform.rotation
+
+            self.get_logger().info(
+                f"目標位置: [{target_pose.pose.position.x:.3f}, {target_pose.pose.position.y:.3f}, {target_pose.pose.position.z:.3f}]")
 
             # 發送目標到 MoveIt
             self.send_target_goal(target_pose)
