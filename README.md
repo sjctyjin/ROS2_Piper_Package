@@ -13,7 +13,7 @@ pip install numpy==1.21.1
 
  ros2 run transform_example yolov8_detect_pose
 
-最後啟動piper的xarco，就能得到一開始的結果。
+最後啟動piper的xarco，就能得到一開始的結果，如只需要啟動moveit，可直接執行第4點。
 
 3. ros2 launch piper_description display_xacro.launch.py
 
