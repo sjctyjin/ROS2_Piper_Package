@@ -2,6 +2,11 @@
 ```bash
 pip install numpy==1.21.1
 ```
+### ROS package
+```bash
+sudo apt install ros-humble-tf-transformations
+
+```
 ### 1. 先啟動realsense ros節點
 ```bash
 ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
