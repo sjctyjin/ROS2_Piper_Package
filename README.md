@@ -10,6 +10,9 @@ sudo apt install ros-humble-tf-transformations
 ### 1. 先啟動realsense ros節點
 ```bash
 ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
+# 查看模型
+ros2 launch realsense2_description view_model.launch.py model:=test_d405_camera.urdf.xacro
+
 ```
 #### 03-28 奧比中光 Debai相機
 ```bash
