@@ -48,8 +48,17 @@ ros2 run tf2_ros tf2_echo base_link link6 #監聽手臂末端座標及姿態值
 ```
 
 ### 第六點 為持續輸出moveit指令，若要透過call service來移動，則執行以下指令
-```bash
+```bash 
 ros2 run transform_example object_pose_planner_service 
+
+此指令動作包含 :
+1. 將object_in_base座標及姿態提供給手臂規劃組
+2. arm規劃組進行規畫並移動
+移動順序
+1. 開爪 (gripper open)
+2. 手臂末端移動至該座標
+3. 合爪 (gripper close)
+
 ```
 ### 下執行指令
 
