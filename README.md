@@ -58,10 +58,13 @@ ros2 run transform_example object_pose_planner_service
 1. 開爪 (gripper open)
 2. 手臂末端移動至該座標
 3. 合爪 (gripper close)
-
+ros2 run transform_example gripper_pose_service
 ```
 ### 下執行指令
 
 ```bash
+moveit移動指令
 ros2 service call /trigger_plan std_srvs/srv/Trigger {}
+夾爪指令
+ros2 service call /open_gripper std_srvs/srv/Trigger
 ```
