@@ -3,9 +3,9 @@
   <xacro:arg name="use_nominal_extrinsics" default="false" />
   <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
 
-  <link name="base_link" />
-  <xacro:sensor_d435i parent="base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+  <link name="d435_base_link" />
+  <xacro:sensor_d435i parent="d435_base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
+    <origin xyz="0 0 0" rpy="0 -1.57 1.57"/>
   </xacro:sensor_d435i>
 </robot>
 

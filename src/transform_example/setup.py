@@ -36,6 +36,13 @@ setup(
              'gripper_pose_joint = transform_example.gripper_pose_joint:main', #夾爪 joint7 /joint_states 控制開合 服務
              # 控制開 : ros2 service call /gripper/set_open std_srvs/srv/SetBool "{data: true}"
 	     # 控制關 : ros2 service call /gripper/set_open std_srvs/srv/SetBool "{data: false}"
+	     'tf_web_publisher = transform_example.tf_web_publisher:main',#座標轉換
         ],
     },
 )
+
+
+
+
+
+

@@ -13,6 +13,8 @@ import copy
 from ultralytics import YOLO
 from ultralytics import SAM  # Import the SAM model
 import time
+from tf_transformations import quaternion_multiply, quaternion_from_matrix, quaternion_matrix
+from scipy.spatial.transform import Rotation as Rs
 
 class GraspPoseDetector(Node):
     def __init__(self):
@@ -22,6 +24,7 @@ class GraspPoseDetector(Node):
         self.declare_parameter('yolo_model', 'pamu.pt')
         self.declare_parameter('sam_model', 'sam2.1_b.pt')  # Add parameter for SAM model sam2.1_b
         self.declare_parameter('debug_visualization', True)
+        self.detected_image_pub = self.create_publisher(Image, '/yolo/detect_img', 10)
 
         # 獲取參數
         yolo_model_path = self.get_parameter('yolo_model').get_parameter_value().string_value
@@ -45,12 +48,13 @@ class GraspPoseDetector(Node):
             self.sam_model = None
 
         # 訂閱影像和相機參數
-        self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw',
-                                                  self.depth_callback, 10)
-        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info',
-                                                        self.camera_info_callback, 10)
-
+        #self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
+        #self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
+        #self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
+        
+        self.image_sub = self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
+        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
         # 新增遮罩發布者（用於調試和可視化）
         self.mask_pub = self.create_publisher(Image, 'segmentation_mask', 10)
 
@@ -71,6 +75,22 @@ class GraspPoseDetector(Node):
         self.result_image_pub = self.create_publisher(Image, 'detection_result', 10)
 
         self.get_logger().info('夾取姿態偵測節點已初始化，等待影像數據...')
+        
+        # TF2 Buffer 和 Listener
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+
+        
+        # 座標系名稱
+        self.object_frame = 'object_frame'  # 物體座標系 (來自 YOLO 輸出的 TF)
+        self.camera_frame = 'camera_color_optical_frame'   # 相機座標系
+        self.link6_frame = 'link6'          # link6 座標系
+        self.base_frame = 'base_link'       # 基座座標系
+
+        # 啟動定時器，每 0.5 秒執行一次
+        self.timer = self.create_timer(0.1, self.transform_object_to_base)
+        self.get_logger().info('啟動定時器')
 
     def camera_info_callback(self, msg):
         """接收相機內參"""
@@ -105,6 +125,11 @@ class GraspPoseDetector(Node):
                 # 顯示影像（無檢測結果）
                 cv2.imshow("Object Detection", cv_image)
                 cv2.waitKey(1)
+                #發布影像
+                result_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
+                result_msg.header.stamp = msg.header.stamp
+                result_msg.header.frame_id = self.color_frame_id  # 與相機一致
+                self.detected_image_pub.publish(result_msg)
             return
 
         # 獲取所有檢測結果
@@ -132,11 +157,24 @@ class GraspPoseDetector(Node):
             if conf > best_conf:
                 best_conf = conf
                 best_detection = detection
-
+                
+        if best_conf < 0.75:
+            self.get_logger().warning(f'信心不足 ： {best_conf}')
+            return
+            
         # 處理最佳檢測結果
         if best_detection is not None:
             x1, y1, x2, y2, conf, cls = best_detection
             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+            # 計算邊界框中心點
+            center_pixel_x = int((x1 + x2) / 2)
+            center_pixel_y = int((y1 + y2) / 2)
+
+            # 獲取中心點的深度值
+            center_depth = self.depth_image[center_pixel_y, center_pixel_x] / 1000.0  # 毫米轉米
+            if center_depth > 0.5:
+                self.get_logger().warning('超出距離')
+                return
 
             # 使用SAM進行像素級分割 (如果可用)
             if self.sam_model is not None:
@@ -150,13 +188,7 @@ class GraspPoseDetector(Node):
                 mask = np.zeros(cv_image.shape[:2], dtype=np.uint8)
                 mask[y1:y2, x1:x2] = 255
 
-            # 計算邊界框中心點
-            center_pixel_x = int((x1 + x2) / 2)
-            center_pixel_y = int((y1 + y2) / 2)
-
-            # 獲取中心點的深度值
-            center_depth = self.depth_image[center_pixel_y, center_pixel_x] / 1000.0  # 毫米轉米
-
+            
             if center_depth == 0:
                 self.get_logger().warning(f"物體中心點深度無效: ({center_pixel_x}, {center_pixel_y})")
                 return
@@ -205,6 +237,11 @@ class GraspPoseDetector(Node):
 
                 cv2.imshow("Object Detection", result_viz)
                 cv2.waitKey(1)
+                #發布影像
+                result_msg = self.bridge.cv2_to_imgmsg(result_viz, encoding='bgr8')
+                result_msg.header.stamp = msg.header.stamp
+                result_msg.header.frame_id = self.color_frame_id  # 與相機一致
+                self.detected_image_pub.publish(result_msg)
 
                 # 發布 TF 變換
                 self.publish_object_tf(grasp_position, rotation_matrix, msg.header.stamp)
@@ -505,10 +542,7 @@ class GraspPoseDetector(Node):
         t.header.frame_id = self.color_frame_id
         t.child_frame_id = "object_frame"
 
-        # 設置位置
-        t.transform.translation.x = float(position[0])
-        t.transform.translation.y = float(position[1])
-        t.transform.translation.z = float(position[2]) - 0.1
+       
 
         # 從旋轉矩陣轉換為四元數
         trace = rotation_matrix[0, 0] + rotation_matrix[1, 1] + rotation_matrix[2, 2]
@@ -538,6 +572,10 @@ class GraspPoseDetector(Node):
                 x = (rotation_matrix[0, 2] + rotation_matrix[2, 0]) / s
                 y = (rotation_matrix[1, 2] + rotation_matrix[2, 1]) / s
                 z = 0.25 * s
+         # 設置位置
+        t.transform.translation.x = float(position[0])
+        t.transform.translation.y = float(position[1])
+        t.transform.translation.z = float(position[2]) - 0.1
 
         # 設置四元數
         t.transform.rotation.x = float(x)
@@ -723,6 +761,101 @@ class GraspPoseDetector(Node):
         self.grasp_points_pub.publish(grasp_points_array)
 
         self.get_logger().info("已發布 RViz 可視化標記")
+    def transform_object_to_base(self):
+        try:
+            # 直接使用 TF2 的查詢功能獲取從相機到基座的變換
+            self.get_logger().info('嘗試查詢從相機到基座的變換...')
+            transform_base_to_camera = self.tf_buffer.lookup_transform(
+                self.base_frame, self.camera_frame, rclpy.time.Time()
+            )
+
+            # 嘗試獲取物體相對於相機的變換
+            self.get_logger().info('嘗試查詢物體相對於相機的變換...')
+            transform_camera_to_object = self.tf_buffer.lookup_transform(
+                self.camera_frame, self.object_frame, rclpy.time.Time()
+            )
+            # 1. 將相機到物體的變換轉換為矩陣
+            T_camera_to_object = self.transform_to_matrix(transform_camera_to_object)
+
+            # 2. 將基座到相機的變換轉換為矩陣
+            T_base_to_camera = self.transform_to_matrix(transform_base_to_camera)
+
+            # 3. 計算基座到物體的變換矩陣
+            T_base_to_object = np.dot(T_base_to_camera, T_camera_to_object)
+
+            # 4. 從變換矩陣提取位置和姿態
+            position = T_base_to_object[:3, 3]
+            rotation_matrix = T_base_to_object[:3, :3]
+
+            # 從旋轉矩陣計算四元數
+            quaternion = quaternion_from_matrix(T_base_to_object)
+            # 補 Z 軸旋轉 90 度
+            q_orig = Rs.from_quat(quaternion) 
+            q_z90 = Rs.from_euler('z', 90, degrees=True)
+            q_new = q_orig * q_z90
+            quaternion = q_new.as_quat()
+
+            # 5. 廣播物體相對於基座的TF
+            self.broadcast_object_tf(position, quaternion)
+
+            # 輸出結果
+            self.get_logger().info(f"物體位置相對於基座: {position}")
+            self.get_logger().info(f"物體姿態相對於基座(四元數): {quaternion}")          
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to transform object point: {str(e)}")
+
+    def transform_to_matrix(self, transform: TransformStamped):
+        """ 將 TF 變換轉換為 4x4 齊次變換矩陣 """
+        trans = transform.transform.translation
+        rot = transform.transform.rotation
+
+        # 旋轉矩陣 (四元數轉換)
+        q = [rot.x, rot.y, rot.z, rot.w]
+        R = self.quaternion_to_rotation_matrix(q)
+        
+        # 平移向量
+        T = np.array([[R[0, 0], R[0, 1], R[0, 2], trans.x],
+                      [R[1, 0], R[1, 1], R[1, 2], trans.y],
+                      [R[2, 0], R[2, 1], R[2, 2], trans.z],
+                      [0, 0, 0, 1]])
+        return T
+
+    def quaternion_to_rotation_matrix(self, q):
+        """ 將四元數轉換為旋轉矩陣 """
+        x, y, z, w = q
+        R = np.array([
+            [1 - 2 * y**2 - 2 * z**2, 2 * x * y - 2 * z * w, 2 * x * z + 2 * y * w],
+            [2 * x * y + 2 * z * w, 1 - 2 * x**2 - 2 * z**2, 2 * y * z - 2 * x * w],
+            [2 * x * z - 2 * y * w, 2 * y * z + 2 * x * w, 1 - 2 * x**2 - 2 * y**2]
+        ])
+        return R
+    def broadcast_object_tf(self, position,quaternion):
+        """ 廣播物體的 TF 到 base_link """
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = self.base_frame  # 基座座標系
+        t.child_frame_id = 'object_in_base'  # 新的物體 TF 名稱
+
+        # 平移部分
+        t.transform.translation.x = position[0]
+        t.transform.translation.y = position[1]
+        t.transform.translation.z = position[2]
+
+        # 假設旋轉為單位四元數 (物體沒有旋轉)
+        # t.transform.rotation.x = 0.0
+        # t.transform.rotation.y = 0.0
+        # t.transform.rotation.z = 0.0
+        # t.transform.rotation.w = 1.0
+        # 旋轉部分（四元數）
+        t.transform.rotation.x = float(quaternion[0])
+        t.transform.rotation.y = float(quaternion[1])
+        t.transform.rotation.z = float(quaternion[2])
+        t.transform.rotation.w = float(quaternion[3])
+
+        # 發布 TF
+        self.tf_broadcaster.sendTransform(t)
+        self.get_logger().info(f"發布了物體TF，位置: {position}，姿態: {quaternion}")
 
 def main(args=None):
     rclpy.init(args=args)

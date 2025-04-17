@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 70
+    Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -9,7 +9,7 @@ Panels:
         - /TF1/Frames1
         - /PointCloud21
       Splitter Ratio: 0.5
-    Tree Height: 160
+    Tree Height: 230
   - Class: rviz_common/Help
     Name: Help
   - Class: rviz_common/Views
@@ -271,6 +271,10 @@ Visualization Manager:
           Value: false
         camera_depth_optical_frame:
           Value: false
+        camera_ir_frame:
+          Value: false
+        camera_ir_optical_frame:
+          Value: false
         camera_link:
           Value: false
         d405_base_link:
@@ -288,10 +292,12 @@ Visualization Manager:
         link5:
           Value: false
         link6:
-          Value: true
+          Value: false
         link7:
           Value: false
         object_frame:
+          Value: true
+        object_in_base:
           Value: true
         world:
           Value: false
@@ -312,16 +318,21 @@ Visualization Manager:
                         d405_base_link:
                           camera_bottom_screw_frame:
                             camera_link:
-                              camera_color_frame:
-                                camera_color_optical_frame:
-                                  object_frame:
-                                    {}
                               camera_depth_frame:
+                                camera_color_frame:
+                                  camera_color_optical_frame:
+                                    object_frame:
+                                      {}
                                 camera_depth_optical_frame:
                                   {}
+                                camera_ir_frame:
+                                  camera_ir_optical_frame:
+                                    {}
                         gripper_base:
                           link7:
                             {}
+            object_in_base:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -376,25 +387,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.1588022708892822
+      Distance: 2.227743148803711
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.10269646346569061
-        Y: 0.5929149985313416
-        Z: 0.22183451056480408
+        X: -0.18962262570858002
+        Y: 0.3825266361236572
+        Z: 0.1456025242805481
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4347974359989166
+      Pitch: 0.4297972619533539
       Target Frame: world
       Value: Orbit (rviz_default_plugins)
-      Yaw: 3.4638166427612305
+      Yaw: 1.7206414937973022
     Saved: ~
 Window Geometry:
   Displays:

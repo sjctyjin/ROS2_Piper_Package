@@ -3,7 +3,7 @@
   name="piper"
   xmlns:xacro="http://ros.org/wiki/xacro">
   
-    <xacro:include filename="$(find realsense_custom_description)/urdf/test_d435i_camera.urdf.xacro"/>
+    <xacro:include filename="$(find realsense_custom_description)/urdf/test_d405_camera.urdf.xacro"/>
     
 
 <!-- world -->
@@ -14,10 +14,12 @@
   </joint>
 
 <!-- 相機與第六軸連接 -->
-<joint name="d435_joint" type="fixed">
-    <origin xyz="-0.080 0.0669 -0.2959" rpy="-0.3358 0.00566 -1.6549"/>
+<joint name="d405_joint" type="fixed">
+    <!--  <origin xyz="-0.064868 0.014226 0.029185" rpy="-0.283249 0.012335 -1.670768"/> 
+    <origin xyz="-0.06092 0.00551 0.030946" rpy="-0.29119 0.016918 -1.6641"/>-->
+    <origin xyz="-0.055 0.0144 0.0082" rpy="-0.253 0.0632 -1.635"/>
     <parent link="link6"/>
-    <child link="d435_base_link"/>
+    <child link="d405_base_link"/>
 </joint>
 
   
