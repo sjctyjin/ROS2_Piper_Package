@@ -11,6 +11,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/detect.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/arm_bringup.launch.py']),
+        
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -21,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+             'joint_gui_pubs = transform_example.joint_gui_pub:main',#座標發布啟動robot
              'transform_point = transform_example.transform_point:main',#將yolov8_point輸出的座標結果轉換為base_link的相關座標
              'detection_to_moveit = transform_example.object_pose_planner:main',#將取得的物件座標轉換到手臂執行器
              'pose_point          = transform_example.pose_point:main',#POST座標發布範例
@@ -37,6 +40,7 @@ setup(
              # 控制開 : ros2 service call /gripper/set_open std_srvs/srv/SetBool "{data: true}"
 	     # 控制關 : ros2 service call /gripper/set_open std_srvs/srv/SetBool "{data: false}"
 	     'tf_web_publisher = transform_example.tf_web_publisher:main',#座標轉換
+	     
         ],
     },
 )

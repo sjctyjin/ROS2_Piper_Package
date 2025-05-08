@@ -100,7 +100,7 @@ class GripperTest(Node):
             
             self.get_logger().info(f'Sending gripper move request (target: {target_position})...')
             future = self.move_group_client.send_goal_async(goal_msg)
-            time.sleep(3)
+            time.sleep(1)
             #rclpy.spin_until_future_complete(self, future, timeout_sec=2.0)
             self.get_logger().info('五秒時間到')
             return True

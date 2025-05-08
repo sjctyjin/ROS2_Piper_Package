@@ -15,7 +15,7 @@
 
 <!-- 相機與第六軸連接 -->
 <joint name="d435_joint" type="fixed">
-    <origin xyz="-0.080 0.0669 -0.2959" rpy="-0.3358 0.00566 -1.6549"/>
+    <origin xyz="-0.080 0.0669 -0.0473" rpy="-0.3448 0.0184 -1.536"/>
     <parent link="link6"/>
     <child link="d435_base_link"/>
 </joint>

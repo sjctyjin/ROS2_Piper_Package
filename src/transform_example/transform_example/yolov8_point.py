@@ -14,18 +14,26 @@ from scipy.spatial.transform import Rotation as Rs
 class CameraYoloProcessor(Node):
     def __init__(self):
         super().__init__('camera_yolo_processor')
+        self.last_detection_time = self.get_clock().now()  # 初始化偵測時間
+        self.detection_timeout = rclpy.duration.Duration(seconds=0.5)  # 可容忍時間
+
 
         # YOLO 模型加載
-        self.model = YOLO('pamu.pt')  # 替換為你的模型路徑
+        self.model = YOLO('demo.pt')  # 替換為你的模型路徑
 
         # 訂閱影像和相機參數
-        #self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
-        #self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
-        #self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
+        self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
+        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
         
-        self.image_sub = self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
-        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
+        
+        # 创建发布者提供web前端使用
+        self.publisher = self.create_publisher(TransformStamped, '/object_in_frame', 10)
+        self.detected_image_pub = self.create_publisher(Image, '/yolo/detect_img', 10)
+        
+        #self.image_sub = self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 10)
+        #self.depth_sub = self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
+        #self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
         self.color_frame_id = 'camera_color_optical_frame' 
 
 
@@ -49,6 +57,8 @@ class CameraYoloProcessor(Node):
 
         # 啟動定時器，每 0.5 秒執行一次
         self.timer = self.create_timer(0.1, self.transform_object_to_base)
+        # 创建定时器(給web使用)
+        self.tf_timer = self.create_timer(0.1, self.publish_transform)
         self.get_logger().info('啟動定時器')
         
 
@@ -70,12 +80,25 @@ class CameraYoloProcessor(Node):
         if self.camera_intrinsics is None or self.depth_image is None:
             self.get_logger().warning("等待相機參數和深度影像")
             return
-
         # 將 ROS Image 轉換為 OpenCV 格式
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        
         print("Test : ",cv_image.shape[:2])
+        
+        
+        def display():
+            # 顯示影像（無檢測結果）
+            cv2.imshow("YOLO Detection", cv_image)
+            cv2.waitKey(1)
+            #發布影像
+            result_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
+            result_msg.header.stamp = msg.header.stamp
+            result_msg.header.frame_id = self.color_frame_id  # 與相機一致
+            self.detected_image_pub.publish(result_msg)
+            
         # 使用 YOLO 偵測物體
         results = self.model(cv_image)
+        
         detections = results[0].boxes.data.cpu().numpy()  # 偵測結果 [x1, y1, x2, y2, conf, class]
  
         height, width = cv_image.shape[:2]  # 取得影像高度和寬度
@@ -88,35 +111,74 @@ class CameraYoloProcessor(Node):
 	    # 畫垂直線
         cv2.line(cv_image, (center_x, 0), (center_x, height), (255, 255, 255), 2)
         #若無目標物 回歸原點
+        # 選擇置信度最高的檢測結果
+        best_detection = None
+        best_conf = 0
 
         for detection in detections:
             x1, y1, x2, y2, conf, cls = detection
+            pixel_x = int((x1 + x2) / 2)
+            pixel_y = int((y1 + y2) / 2)
+            depth = self.depth_image[pixel_y, pixel_x] / 1000.0
+            
+            if depth < 1.4:
+                if conf > 0.6:
+                # 獲取深度值
+                    if conf > best_conf:
+                        self.get_logger().warning(f"最佳直-{conf}")
+                        self.get_logger().warning(f"檢測深度-{depth}")
+                        best_conf = conf
+                        best_detection = detection
+
+        # 處理最佳檢測結果
+        if best_detection is not None:
+            x1, y1, x2, y2, conf, cls = best_detection
             # if cls != 0:
             #     self.broadcast_tf([0.1, 0.0, 0.195], [0, 0, 0, 1], 'object_frame')
             #     continue
             pixel_x = int((x1 + x2) / 2)
             pixel_y = int((y1 + y2) / 2)
+            if conf > 0.6:
+                # 獲取深度值
+                depth = self.depth_image[pixel_y, pixel_x] / 1000.0  # 假設深度以毫米為單位，轉換為米
+                if depth == 0:
+                    return
+                
+                
+                # 將像素座標轉換為相機座標
+                uv = np.array([pixel_x, pixel_y, 1.0])
+                xyz_camera = depth * np.linalg.inv(self.camera_intrinsics).dot(uv)
+                # 在影像上標記
+                cv2.rectangle(cv_image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                cv2.circle(cv_image, (pixel_x ,pixel_y), 10, (255, 0, 0), -4)
+                text = f"cls :{'mature' if cls == 0.0 else 'unmature'} \nconf {round(conf*100,1)}% \nX:{round((xyz_camera*100)[0],1)}mm\nY:{round((xyz_camera*100)[1],1)}mm\nZ:{round((xyz_camera*100)[2],1)}mm"
+                # 起始位置
+                x, y0 = (pixel_x+50), pixel_y-20
+                dy = 30  # 每行之間的垂直間距
 
-            # 獲取深度值
-            depth = self.depth_image[pixel_y, pixel_x] / 1000.0  # 假設深度以毫米為單位，轉換為米
-            if depth == 0:
-                continue
+                for i, line in enumerate(text.split('\n')):
+                    y = y0 + i * dy
+                    cv2.putText(cv_image, line, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                #cv2.putText(cv_image, , ((pixel_x-100), pixel_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-            # 將像素座標轉換為相機座標
-            uv = np.array([pixel_x, pixel_y, 1.0])
-            xyz_camera = depth * np.linalg.inv(self.camera_intrinsics).dot(uv)
-            # 在影像上標記
-            cv2.rectangle(cv_image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-            cv2.circle(cv_image, (pixel_x ,pixel_y), 10, (255, 0, 0), -4)
-            cv2.putText(cv_image, f"conf {conf} ,XYZ: {xyz_camera*100}mm", ((pixel_x-100), pixel_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-            # 假設物體在相機坐標系下的姿態 (此處可替換為更精確的估計)
-            rotation_quaternion = [0, 0, 0, 1]  # 單位四元數
-            if cls == 0:
-                # 廣播到 TF
-                self.broadcast_tf(xyz_camera, rotation_quaternion, 'object_frame')
+                # 假設物體在相機坐標系下的姿態 (此處可替換為更精確的估計)
+                rotation_quaternion = [0, 0, 0, 1]  # 單位四元數
+                if depth > 0.4:
+                    self.get_logger().warning('超出距離')
+                    display()
+                    return
+                if cls == 0 :
+                    # 廣播到 TF
+                    self.broadcast_tf(xyz_camera, rotation_quaternion, 'object_frame')
+                    self.last_detection_time = self.get_clock().now()
 
         # 顯示影像
+        result_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
+        result_msg.header.stamp = msg.header.stamp
+        result_msg.header.frame_id = self.color_frame_id  # 與相機一致
+        self.detected_image_pub.publish(result_msg)
+
+
         cv2.imshow("YOLO Detection", cv_image)
         cv2.waitKey(1)
     def broadcast_tf(self, translation, rotation, child_frame_id):
@@ -136,6 +198,11 @@ class CameraYoloProcessor(Node):
         self.tf_broadcaster.sendTransform(t)
         self.get_logger().info(f"Broadcasting TF for {child_frame_id}")
     def transform_object_to_base(self):
+    
+        now = self.get_clock().now()
+        if now - self.last_detection_time > self.detection_timeout:
+            self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")
+            return  # 物體已不在畫面中，停止發布
         try:
             # 直接使用 TF2 的查詢功能獲取從相機到基座的變換
             self.get_logger().info('嘗試查詢從相機到基座的變換...')
@@ -233,6 +300,22 @@ class CameraYoloProcessor(Node):
         # 發布 TF
         self.tf_broadcaster.sendTransform(t)
         self.get_logger().info(f"發布了物體TF，位置: {position}，姿態: {quaternion}")
+    def publish_transform(self):
+        try:
+            # 查找TF
+            transform = self.tf_buffer.lookup_transform(
+                'base_link', 'object_in_base', rclpy.time.Time())
+            now = self.get_clock().now()
+            if now - self.last_detection_time > self.detection_timeout:
+                self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")
+                return  # 物體已不在畫面中，停止發布
+            # 发布到话题
+            self.publisher.publish(transform)
+            
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, 
+                tf2_ros.ExtrapolationException) as e:
+            self.get_logger().warning(f'无法查找变换: {e}')
+
 
 def main(args=None):
     rclpy.init(args=args)

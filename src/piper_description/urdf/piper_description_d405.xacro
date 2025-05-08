@@ -15,9 +15,9 @@
 
 <!-- 相機與第六軸連接 -->
 <joint name="d405_joint" type="fixed">
-    <!--  <origin xyz="-0.064868 0.014226 0.029185" rpy="-0.283249 0.012335 -1.670768"/> 
-    <origin xyz="-0.06092 0.00551 0.030946" rpy="-0.29119 0.016918 -1.6641"/>-->
-    <origin xyz="-0.055 0.0144 0.0082" rpy="-0.253 0.0632 -1.635"/>
+      <!--<origin xyz="-0.064868 0.014226 0.029185" rpy="-0.283249 0.012335 -1.670768"/> -->
+   <origin xyz="-0.06092 0.00551 0.030946" rpy="-0.29119 0.016918 -1.6641"/>
+     <!--<origin xyz="-0.055 0.0144 0.0082" rpy="-0.253 0.0632 -1.635"/>-->
     <parent link="link6"/>
     <child link="d405_base_link"/>
 </joint>
@@ -101,7 +101,7 @@
       xyz="0 0 1" />
     <limit
       lower="-2.618"
-      upper="2.168"
+      upper="2.618"
       effort="100"
       velocity="5" />
   </joint>
@@ -420,7 +420,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="1.5708 0 0" />
       <geometry>
         <mesh
           filename="package://piper_description/meshes/link7.STL" />
@@ -446,16 +446,16 @@
     type="prismatic">
     <origin
       xyz="0 0 0.1358"
-      rpy="1.5708 0 0" />
+      rpy="0 0 0" />
     <parent
       link="gripper_base" />
     <child
       link="link7" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0.09"
+      lower="-0.09"
+      upper="0"
       effort="10"
       velocity="1" />
   </joint>

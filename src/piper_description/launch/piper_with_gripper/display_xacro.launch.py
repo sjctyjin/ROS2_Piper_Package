@@ -10,10 +10,10 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     urdf_tutorial_path = get_package_share_path('piper_description')
-    default_model_path = urdf_tutorial_path / 'urdf/piper_description_d435.xacro'
+    default_model_path = urdf_tutorial_path / 'urdf/piper_description_d405.xacro'
     default_rviz_config_path = urdf_tutorial_path / 'rviz/piper_ctrl.rviz'
 
-    gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
+    gui_arg = DeclareLaunchArgument(name='gui', default_value='false', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
     model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
                                       description='Absolute path to robot urdf file')
@@ -22,6 +22,8 @@ def generate_launch_description():
 
     robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
                                        value_type=str)
+                                       
+                                      
 
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
@@ -41,6 +43,14 @@ def generate_launch_description():
         executable='joint_state_publisher_gui',
         condition=IfCondition(LaunchConfiguration('gui'))
     )
+    
+    # 這是單次的 TF 發布，可以放在 launch 裡
+    initial_joint_pub_node = Node(
+        package='transform_example',
+        executable='joint_gui_pubs',
+        name='joint_gui_pubs',
+        output='screen'
+    )
 
     rviz_node = Node(
         package='rviz2',
@@ -54,8 +64,11 @@ def generate_launch_description():
         gui_arg,
         model_arg,
         rviz_arg,
-        joint_state_publisher_node,
-        joint_state_publisher_gui_node,
+        #joint_state_publisher_node,
+        #joint_state_publisher_gui_node,
+        
         robot_state_publisher_node,
-        rviz_node
+        rviz_node,
+        initial_joint_pub_node,
+        
     ])

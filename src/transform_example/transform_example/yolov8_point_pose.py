@@ -19,13 +19,19 @@ from scipy.spatial.transform import Rotation as Rs
 class GraspPoseDetector(Node):
     def __init__(self):
         super().__init__('grasp_pose_detector')
+        # 初始化偵測時間
+        self.last_detection_time = self.get_clock().now()  
+        # 可容忍時間
+        self.detection_timeout = rclpy.duration.Duration(seconds=1)  
 
         # 宣告參數
-        self.declare_parameter('yolo_model', 'pamu.pt')
-        self.declare_parameter('sam_model', 'sam2.1_b.pt')  # Add parameter for SAM model sam2.1_b
+        self.declare_parameter('yolo_model', 'demo.pt')
+        self.declare_parameter('sam_model', 'mobile_sam.pt')  # Add parameter for SAM model sam2.1_b
         self.declare_parameter('debug_visualization', True)
         self.detected_image_pub = self.create_publisher(Image, '/yolo/detect_img', 10)
-
+        # 创建发布者
+        self.publisher = self.create_publisher(
+            TransformStamped, '/object_in_frame', 10)
         # 獲取參數
         yolo_model_path = self.get_parameter('yolo_model').get_parameter_value().string_value
         sam_model_path = self.get_parameter('sam_model').get_parameter_value().string_value
@@ -48,13 +54,13 @@ class GraspPoseDetector(Node):
             self.sam_model = None
 
         # 訂閱影像和相機參數
-        #self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
-        #self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
-        #self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
+        self.image_sub = self.create_subscription(Image, '/camera/camera/color/image_rect_raw', self.image_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
+        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
         
-        self.image_sub = self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
-        self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
+        #self.image_sub = self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 10)
+        #self.depth_sub = self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
+        #self.camera_info_sub = self.create_subscription(CameraInfo, '/camera/color/camera_info', self.camera_info_callback, 10)
         # 新增遮罩發布者（用於調試和可視化）
         self.mask_pub = self.create_publisher(Image, 'segmentation_mask', 10)
 
@@ -89,7 +95,9 @@ class GraspPoseDetector(Node):
         self.base_frame = 'base_link'       # 基座座標系
 
         # 啟動定時器，每 0.5 秒執行一次
-        self.timer = self.create_timer(0.1, self.transform_object_to_base)
+        #self.timer = self.create_timer(0.1, self.transform_object_to_base)
+        # 创建定时器(給web使用)
+        self.tf_timer = self.create_timer(0.1, self.publish_transform)
         self.get_logger().info('啟動定時器')
 
     def camera_info_callback(self, msg):
@@ -100,13 +108,24 @@ class GraspPoseDetector(Node):
             [msg.k[6], msg.k[7], msg.k[8]]
         ])
         self.color_frame_id = msg.header.frame_id
-        self.get_logger().info(f'已獲取相機內參，相機坐標系: {self.color_frame_id}')
+        #self.get_logger().info(f'已獲取相機內參，相機坐標系: {self.color_frame_id}')
 
     def depth_callback(self, msg):
         """接收深度影像"""
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
 
     def image_callback(self, msg):
+    
+        def display():
+            # 顯示影像（無檢測結果）
+            cv2.imshow("Object Detection", cv_image)
+            cv2.waitKey(1)
+            #發布影像
+            result_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
+            result_msg.header.stamp = msg.header.stamp
+            result_msg.header.frame_id = self.color_frame_id  # 與相機一致
+            self.detected_image_pub.publish(result_msg)
+            
         """處理彩色影像"""
         if self.camera_intrinsics is None or self.depth_image is None:
             self.get_logger().warning("等待相機參數和深度影像")
@@ -121,6 +140,8 @@ class GraspPoseDetector(Node):
 
         # 檢查是否有檢測到物體
         if len(results[0].boxes) == 0:
+            self.get_logger().warning("無物體")
+            
             if self.debug_viz:
                 # 顯示影像（無檢測結果）
                 cv2.imshow("Object Detection", cv_image)
@@ -157,9 +178,10 @@ class GraspPoseDetector(Node):
             if conf > best_conf:
                 best_conf = conf
                 best_detection = detection
-                
-        if best_conf < 0.75:
+                                                 
+        if best_conf < 0.85:
             self.get_logger().warning(f'信心不足 ： {best_conf}')
+            display()
             return
             
         # 處理最佳檢測結果
@@ -172,15 +194,19 @@ class GraspPoseDetector(Node):
 
             # 獲取中心點的深度值
             center_depth = self.depth_image[center_pixel_y, center_pixel_x] / 1000.0  # 毫米轉米
-            if center_depth > 0.5:
+            
+            if center_depth > 0.4:
                 self.get_logger().warning('超出距離')
+                display()
                 return
+
 
             # 使用SAM進行像素級分割 (如果可用)
             if self.sam_model is not None:
                 mask = self.segment_with_sam(cv_image, x1, y1, x2, y2)
                 if mask is None:
                     self.get_logger().warning('無法生成像素級分割遮罩')
+                    display()
                     return
             else:
                 # 如果SAM模型不可用，則使用邊界框代替
@@ -191,6 +217,7 @@ class GraspPoseDetector(Node):
             
             if center_depth == 0:
                 self.get_logger().warning(f"物體中心點深度無效: ({center_pixel_x}, {center_pixel_y})")
+                display()
                 return
 
             # 使用遮罩提取點雲，而不是簡單的矩形區域
@@ -199,6 +226,7 @@ class GraspPoseDetector(Node):
             # 檢查是否提取到足夠的點
             if len(roi_points) < 10:
                 self.get_logger().warning(f"遮罩內有效點數不足: {len(roi_points)}")
+                display()
                 return
 
             # 將點列表轉換為 NumPy 數組
@@ -212,7 +240,7 @@ class GraspPoseDetector(Node):
             o3d_cloud, _ = o3d_cloud.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
 
             # 生成抓取姿態
-            self.get_logger().info('計算最佳抓取姿態...')
+            #self.get_logger().info('計算最佳抓取姿態...')
             result = self.generate_grasp_pose(o3d_cloud)
 
             if result is not None:
@@ -245,12 +273,13 @@ class GraspPoseDetector(Node):
 
                 # 發布 TF 變換
                 self.publish_object_tf(grasp_position, rotation_matrix, msg.header.stamp)
+                
 
                 # 發布 RViz2 可視化標記
-                self.publish_rviz_markers(grasp_position, rotation_matrix, narrow_width, grasp_points, msg.header.stamp)
+                #self.publish_rviz_markers(grasp_position, rotation_matrix, narrow_width, grasp_points, msg.header.stamp)
 
-                self.get_logger().info(f"抓取位置: {grasp_position}")
-                self.get_logger().info(f"夾爪開度: {narrow_width:.3f}m")
+                #self.get_logger().info(f"抓取位置: {grasp_position}")
+                #self.get_logger().info(f"夾爪開度: {narrow_width:.3f}m")
 
             else:
                 self.get_logger().warning('無法生成抓取姿態')
@@ -309,7 +338,7 @@ class GraspPoseDetector(Node):
                 # SAM 的遮罩通常已對應整張影像大小，無需手動「放回去」
                 full_mask = binary_mask
 
-                self.get_logger().info(f'SAM分割成功，遮罩中點數: {np.sum(full_mask > 0)}')
+                #self.get_logger().info(f'SAM分割成功，遮罩中點數: {np.sum(full_mask > 0)}')
             else:
                 self.get_logger().warning('SAM未生成有效遮罩，使用邊界框代替')
                 full_mask[y1:y2, x1:x2] = 255
@@ -370,7 +399,7 @@ class GraspPoseDetector(Node):
             # 添加到點雲
             roi_points.append([xyz_camera[0], xyz_camera[1], xyz_camera[2]])
 
-        self.get_logger().info(f'從遮罩中提取的點數量: {len(roi_points)}')
+        #self.get_logger().info(f'從遮罩中提取的點數量: {len(roi_points)}')
         return roi_points
 
     def generate_grasp_pose(self, point_cloud):
@@ -416,7 +445,7 @@ class GraspPoseDetector(Node):
         # 物體形狀分析
         shape_elongation = eigenvalues[2] / eigenvalues[1]
         shape_flatness = eigenvalues[1] / eigenvalues[0]
-        self.get_logger().info(f"形狀分析 - 延展度: {shape_elongation:.2f}, 平坦度: {shape_flatness:.2f}")
+        #self.get_logger().info(f"形狀分析 - 延展度: {shape_elongation:.2f}, 平坦度: {shape_flatness:.2f}")
         self.get_logger().info(f"物體尺寸估計: {obj_size:.3f} m")
 
         # 定義相機座標系中的Z軸方向（通常是[0,0,1]，朝前）
@@ -427,7 +456,7 @@ class GraspPoseDetector(Node):
 
         # 如果最小主成分不適合作為抓取方向（例如幾乎垂直於相機平面），則使用中間主成分
         if abs(np.dot(minor_axis, camera_z)) > 0.8:
-            self.get_logger().info("最小主成分接近垂直於相機平面，使用中間主成分作為抓取方向")
+            #self.get_logger().info("最小主成分接近垂直於相機平面，使用中間主成分作為抓取方向")
             grasp_axis = middle_axis
 
         # 確保grasp_axis是單位向量
@@ -439,14 +468,14 @@ class GraspPoseDetector(Node):
         if z_alignment < 0.3:  # 允許一定的傾斜
             self.get_logger().info(f"抓取軸與相機Z軸足夠垂直: {z_alignment:.2f}")
         else:
-            self.get_logger().info(f"抓取軸與相機Z軸不夠垂直: {z_alignment:.2f}，進行調整")
+            #self.get_logger().info(f"抓取軸與相機Z軸不夠垂直: {z_alignment:.2f}，進行調整")
             # 嘗試使用其他主成分
             if abs(np.dot(middle_axis, camera_z)) < z_alignment:
                 grasp_axis = middle_axis
-                self.get_logger().info("改用中間主成分作為抓取方向")
+                #self.get_logger().info("改用中間主成分作為抓取方向")
             elif abs(np.dot(major_axis, camera_z)) < z_alignment:
                 grasp_axis = major_axis
-                self.get_logger().info("改用最大主成分作為抓取方向")
+                #self.get_logger().info("改用最大主成分作為抓取方向")
 
         # 再次確保grasp_axis是單位向量
         grasp_axis = grasp_axis / np.linalg.norm(grasp_axis)
@@ -518,10 +547,10 @@ class GraspPoseDetector(Node):
         grasp_position = midpoint
 
         # 記錄主要軸向方向
-        self.get_logger().info(f"X軸（夾爪開合方向）: {x_axis}")
-        self.get_logger().info(f"Y軸（接近方向）: {y_axis}")
-        self.get_logger().info(f"Z軸（穩定方向）: {z_axis}")
-        self.get_logger().info(f"最窄部位的實際寬度: {narrow_width:.3f}m")
+        #self.get_logger().info(f"X軸（夾爪開合方向）: {x_axis}")
+        #self.get_logger().info(f"Y軸（接近方向）: {y_axis}")
+        #self.get_logger().info(f"Z軸（穩定方向）: {z_axis}")
+        #self.get_logger().info(f"最窄部位的實際寬度: {narrow_width:.3f}m")
 
         return grasp_position, rotation_matrix, narrow_width, [min_point, max_point]
 
@@ -575,7 +604,7 @@ class GraspPoseDetector(Node):
          # 設置位置
         t.transform.translation.x = float(position[0])
         t.transform.translation.y = float(position[1])
-        t.transform.translation.z = float(position[2]) - 0.1
+        t.transform.translation.z = float(position[2]) - 0.10
 
         # 設置四元數
         t.transform.rotation.x = float(x)
@@ -584,9 +613,11 @@ class GraspPoseDetector(Node):
         t.transform.rotation.w = float(w)
 
         # 發布 TF
-        self.tf_broadcaster.sendTransform(t)
-
-        self.get_logger().info(f"已發布物體 TF: {t.child_frame_id}")
+        self.tf_broadcaster.sendTransform(t) 
+        #self.get_logger().info(f"已發布物體 TF: {t.child_frame_id}")
+        self.last_detection_time = self.get_clock().now()
+        # 直接call object_in_base變換
+        self.transform_object_to_base() 
 
     def publish_rviz_markers(self, position, rotation_matrix, narrow_width, grasp_points, timestamp):
         """
@@ -667,7 +698,7 @@ class GraspPoseDetector(Node):
         # 設置夾爪基座位置和方向
         base_marker.pose.position.x = float(position[0])
         base_marker.pose.position.y = float(position[1])
-        base_marker.pose.position.z = float(position[2] + 0.05)  # 稍微抬高一點
+        base_marker.pose.position.z = float(position[2] + 0.15)  # 稍微抬高一點
 
         # 從旋轉矩陣轉換為四元數（與 TF 發布相同的計算方法）
         trace = rotation_matrix[0, 0] + rotation_matrix[1, 1] + rotation_matrix[2, 2]
@@ -760,17 +791,21 @@ class GraspPoseDetector(Node):
         self.marker_pub.publish(marker_array)
         self.grasp_points_pub.publish(grasp_points_array)
 
-        self.get_logger().info("已發布 RViz 可視化標記")
+        #self.get_logger().info("已發布 RViz 可視化標記")
     def transform_object_to_base(self):
         try:
+            now = self.get_clock().now()
+            if now - self.last_detection_time > self.detection_timeout:
+                self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")
+                return  # 物體已不在畫面中，停止發布
             # 直接使用 TF2 的查詢功能獲取從相機到基座的變換
-            self.get_logger().info('嘗試查詢從相機到基座的變換...')
+            #self.get_logger().info('嘗試查詢從相機到基座的變換...')
             transform_base_to_camera = self.tf_buffer.lookup_transform(
                 self.base_frame, self.camera_frame, rclpy.time.Time()
             )
 
             # 嘗試獲取物體相對於相機的變換
-            self.get_logger().info('嘗試查詢物體相對於相機的變換...')
+            #self.get_logger().info('嘗試查詢物體相對於相機的變換...')
             transform_camera_to_object = self.tf_buffer.lookup_transform(
                 self.camera_frame, self.object_frame, rclpy.time.Time()
             )
@@ -790,11 +825,12 @@ class GraspPoseDetector(Node):
             # 從旋轉矩陣計算四元數
             quaternion = quaternion_from_matrix(T_base_to_object)
             # 補 Z 軸旋轉 90 度
+            
             q_orig = Rs.from_quat(quaternion) 
             q_z90 = Rs.from_euler('z', 90, degrees=True)
             q_new = q_orig * q_z90
             quaternion = q_new.as_quat()
-
+            
             # 5. 廣播物體相對於基座的TF
             self.broadcast_object_tf(position, quaternion)
 
@@ -840,7 +876,7 @@ class GraspPoseDetector(Node):
         # 平移部分
         t.transform.translation.x = position[0]
         t.transform.translation.y = position[1]
-        t.transform.translation.z = position[2]
+        t.transform.translation.z = position[2] 
 
         # 假設旋轉為單位四元數 (物體沒有旋轉)
         # t.transform.rotation.x = 0.0
@@ -855,8 +891,24 @@ class GraspPoseDetector(Node):
 
         # 發布 TF
         self.tf_broadcaster.sendTransform(t)
+        
         self.get_logger().info(f"發布了物體TF，位置: {position}，姿態: {quaternion}")
-
+    def publish_transform(self):
+        try:
+            # 查找TF
+            transform = self.tf_buffer.lookup_transform(
+                'base_link', 'object_in_base', rclpy.time.Time())
+            now = self.get_clock().now()
+            if now - self.last_detection_time > self.detection_timeout:
+                self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")
+                return  # 物體已不在畫面中，停止發布
+            # 发布到话题
+            self.publisher.publish(transform)
+            self.get_logger().info(f"已發布話題 \n當前時間：{now}\n最後時間 ： {self.last_detection_time}\n延遲時間:{self.detection_timeout}")
+            
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, 
+                tf2_ros.ExtrapolationException) as e:
+            self.get_logger().warning(f'无法查找变换: {e}')
 def main(args=None):
     rclpy.init(args=args)
 
