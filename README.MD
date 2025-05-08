@@ -21,9 +21,9 @@ ros2 launch orbbec_camera dabai.launch.py enable_point_cloud:=true enable_colore
 ### 2. 再啟動剛剛建置的yolov8_detect
 ```bash
 ros2 run transform_example yolov8_detect
-```
-### 2.1 2025-03-14加入SAM分割後 點雲 姿態估測
-```bash
+
+2025-03-14加入SAM分割後 點雲 姿態估測
+
 ros2 run transform_example yolov8_detect_pose
 ```
 ### 3. 最後啟動piper官方launch包
