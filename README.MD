@@ -5,6 +5,19 @@ pip install numpy==1.21.1
 ### ROS package
 ```bash
 sudo apt install ros-humble-tf-transformations
+```
+### 前置設定
+```bash
+
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+
+git clone https://github.com/sjctyjin/ROS2_Piper_Package.git
+
+cd ..
+
+colcon build --symlink-install
+
+source install/setup.bash
 
 ```
 ### 1. 先啟動realsense ros節點
