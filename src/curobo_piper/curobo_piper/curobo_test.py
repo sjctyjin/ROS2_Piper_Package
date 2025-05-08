@@ -18,7 +18,14 @@ class TrajectoryService(Node):
             "joint1", "joint2", "joint3", "joint4",
             "joint5", "joint6", "joint7", "joint8"
         ]
-        self.publisher = self.create_publisher(JointState, '/joint_custom_state', 10)
+
+        self.declare_parameter('place_position_x', 0.12)
+        self.declare_parameter('place_position_y', 0.04)
+        self.declare_parameter('place_position_z', 0.353)
+        
+        self.place_position_x = self.get_parameter('place_position_x').get_parameter_value().double_value
+        self.place_position_y = self.get_parameter('place_position_y').get_parameter_value().double_value
+        self.place_position_z = self.get_parameter('place_position_z').get_parameter_value().double_value
 
         self.dt = 0.01  # 發送間隔
         self.traj_index = 0
@@ -47,7 +54,7 @@ class TrajectoryService(Node):
         return motion_gen
 
     def compute_trajectory(self):
-        goal_pose = Pose.from_list([0.12, 0.04, 0.353, 0.737, 0.000, 0.676, 0.000])
+        goal_pose = Pose.from_list([self.place_position_x, self.place_position_y, self.place_position_z, 0.737, 0.000, 0.676, 0.000])
         start_state = CuroboJointState.from_position(
             torch.tensor([[0.0, 0.2, -0.2, 0.0, 0.1, 0.0]], device="cuda:0"),
             joint_names=self.joint_names[:6],
@@ -99,4 +106,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
