@@ -8,6 +8,11 @@ sudo apt install ros-humble-tf-transformations
 ```
 ### 前置設定
 ```bash
+python 安裝 curobo
+sudo apt install git-lfs
+git clone https://github.com/NVlabs/curobo.git
+cd curobo
+pip install -e . --no-build-isolation
 
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 
