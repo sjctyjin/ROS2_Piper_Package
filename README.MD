@@ -1,6 +1,9 @@
 ### 確認numpy執行環境
 ```bash
 pip install numpy==1.21.1
+pip install torch==2.6.0+cu126
+pip install torchaudio==2.6.0+cu126
+pip install torchvision==0.21.0+cu126
 ```
 ### ROS package
 ```bash
