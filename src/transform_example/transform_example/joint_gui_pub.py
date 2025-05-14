@@ -42,7 +42,7 @@ class JointRelayNode(Node):
         msg.effort = [0.0] * len(self.joint_names)
 
         self.publisher.publish(msg)
-        self.publisher_custom(msg)
+        self.publisher_custom.publish(msg)
         self.init_timer += 1
         self.get_logger().info("🚀 已發送{self.init_timer}次初始 JointState 訊息")
         if self.init_timer >= 4:
