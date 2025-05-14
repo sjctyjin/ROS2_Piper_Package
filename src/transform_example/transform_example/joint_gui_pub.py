@@ -11,6 +11,7 @@ class JointRelayNode(Node):
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 'joint7', 'joint8']
 
         self.publisher = self.create_publisher(JointState, '/joint_states', 10)
+        self.publisher_custom = self.create_publisher(JointState, '/joint_custom_state', 10)
         self.subscription = self.create_subscription(
             JointState,
             '/joint_custom_state',
@@ -41,6 +42,7 @@ class JointRelayNode(Node):
         msg.effort = [0.0] * len(self.joint_names)
 
         self.publisher.publish(msg)
+        self.publisher_custom(msg)
         self.init_timer += 1
         self.get_logger().info("🚀 已發送{self.init_timer}次初始 JointState 訊息")
         if self.init_timer >= 4:
