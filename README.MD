@@ -53,7 +53,8 @@ ros2 run transform_example yolov8_detect_pose
 ### 4. 最後啟動curobo控制抓取放-自動執行
 ```bash
 ros2 run curobo_piper curobo_pick_and_place
-
+or 使用mpc抓取版本
+ros2 run curobo_piper curobo_pick_and_place_mpc
 # 自定义放置位置
 ros2 run curobo_piper curobo_pick_and_place --ros-args -p place_position_x:=0.0 -p place_position_y:=0.3 -p place_position_z:=0.25
 
