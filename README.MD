@@ -45,7 +45,9 @@ ros2 launch orbbec_camera dabai.launch.py enable_point_cloud:=true enable_colore
 ### 3. 再啟動yolov8_detect偵測節點
 ```bash
 ros2 run transform_example yolov8_detect
-2025-03-14加入SAM分割後 點雲 姿態估測
+```
+#### 2025-03-14加入SAM分割後 點雲 姿態估測
+```bash
 ros2 run transform_example yolov8_detect_pose
 ```
 ### 4. 最後啟動curobo控制抓取放-自動執行
