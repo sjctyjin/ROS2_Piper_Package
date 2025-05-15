@@ -53,10 +53,10 @@ ros2 run transform_example yolov8_detect_pose
 ros2 run curobo_piper curobo_pick_and_place
 
 # 自定义放置位置
-ros2 run curobo_piper pick_and_place_launch.py --ros-args -p place_position_x:=0.0 -p place_position_y:=0.3 -p place_position_z:=0.25
+ros2 run curobo_piper curobo_pick_and_place --ros-args -p place_position_x:=0.0 -p place_position_y:=0.3 -p place_position_z:=0.25
 
 # 启用ROSBridge
-ros2 run curobo_piper pick_and_place_launch.py --ros-args -p enable_rosbridge:=true -p rosbridge_host:='127.0.0.1'
+ros2 run curobo_piper curobo_pick_and_place --ros-args -p enable_rosbridge:=true -p rosbridge_host:='127.0.0.1'
 
 ```
 
