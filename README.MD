@@ -28,28 +28,25 @@ colcon build --symlink-install
 source install/setup.bash
 
 ```
-### 1. 先啟動realsense ros節點
-```bash
-ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
-# 查看模型
-ros2 launch realsense2_description view_model.launch.py model:=test_d405_camera.urdf.xacro
-
-```
-#### 03-28 奧比中光 Debai相機
-```bash
-ros2 launch orbbec_camera dabai.launch.py enable_point_cloud:=true enable_colored_point_cloud:=true  align_mode:=HW
-```
-### 2. 再啟動剛剛建置的yolov8_detect
-```bash
-ros2 run transform_example yolov8_detect
-
-2025-03-14加入SAM分割後 點雲 姿態估測
-
-ros2 run transform_example yolov8_detect_pose
-```
-### 3. 最後啟動piper官方launch包
+### 1. 先啟動piper官方launch包
 ```bash
 ros2 launch piper start_single_piper_rviz.launch.py
+```
+
+### 2. 啟動realsense ros節點
+```bash
+ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
+
+# 查看模型
+ros2 launch realsense2_description view_model.launch.py model:=test_d405_camera.urdf.xacro
+#### 03-28 奧比中光 Debai相機
+ros2 launch orbbec_camera dabai.launch.py enable_point_cloud:=true enable_colored_point_cloud:=true  align_mode:=HW
+```
+### 3. 再啟動yolov8_detect偵測節點
+```bash
+ros2 run transform_example yolov8_detect
+2025-03-14加入SAM分割後 點雲 姿態估測
+ros2 run transform_example yolov8_detect_pose
 ```
 ### 4. 最後啟動curobo控制抓取放-自動執行
 ```bash
