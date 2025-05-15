@@ -24,7 +24,8 @@ setup(
          'curobo_plan = curobo_piper.curobo_plan:main',#curobo計算軌跡服務-監聽joint_custom_state
          'curobo_plan_keep = curobo_piper.curobo_plan_keep:main',#curobo計算軌跡並持續跟蹤-監聽joint_custom_state
          'curobo_gen_motion = curobo_piper.curobo_gen_motion:main',#curobo gen計算軌跡並持續跟蹤-監聽joint_custom_state
-         'curobo_pick_and_place = curobo_piper.curobo_pick_and_place:main',
+         'curobo_pick_and_place = curobo_piper.curobo_pick_and_place:main',#curobo gen計算軌跡 抓取放
+         'curobo_pick_and_place_mpc = curobo_piper.curobo_pick_and_place_MPC:main',#curobo MPC計算軌跡 抓取放
         ],
     },
 )
