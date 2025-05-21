@@ -32,7 +32,28 @@ source install/setup.bash
 ```bash
 ros2 launch piper start_single_piper_rviz.launch.py
 ```
+### 啟動雙臂
 
+不要同時，請前後將CAN to USB 接上電腦，後執行指令查看
+```bash
+bash find_all_can_port.sh
+```
+應該會出現類似訊息
+
+```bash
+Interface xxxx is inserted in USB port 3-6.2:1.0
+Interface xxxx is inserted in USB port 3-6.3:1.0
+```
+記下port號碼 3-6.2:1.0，執行下面指令命名激活
+```bash
+bash can_activate.sh can_piper_1 1000000 "3-6.2:1.0"
+bash can_activate.sh can_piper_2 1000000 "3-6.3:1.0"
+```
+完成can的命名與激活後，即可個別launch piper1 與 piper2
+```bash
+ros2 launch piper start_single_piper.launch.py can_port:=can_piper_1
+ros2 launch piper start_single_piper.launch.py can_port:=can_piper_2
+```
 ### 2. 啟動realsense ros節點
 ```bash
 ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
