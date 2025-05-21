@@ -50,6 +50,7 @@ bash can_activate.sh can_piper_1 1000000 "3-6.2:1.0"
 bash can_activate.sh can_piper_2 1000000 "3-6.3:1.0"
 ```
 可執行ifconfig查看是否有can_piper_1 與 can_piper2
+
 完成can的命名與激活後，即可個別launch piper1 與 piper2
 ```bash
 ros2 launch piper start_single_piper.launch.py can_port:=can_piper_1
