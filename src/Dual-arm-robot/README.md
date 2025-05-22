@@ -14,4 +14,15 @@ ros2 launch realsense2_camera rs_launch.py \
   serial_no:=<你的相機序號> \
   pointcloud.enable:=true \
   align_depth.enable:=true
+
+ros2 launch realsense2_camera rs_launch.py camera_name:=cam1 serial_no:=_218622270498
+
+```
+查看相機序號
+```bash
+rs-enumerate-devices
+```
+同時啟動雙鏡頭
+```bash
+ros2 launch realsense2_camera rs_dual_camera_launch.py   serial_no1:=_218622270498   serial_no2:=_218722270604
 ```
