@@ -27,5 +27,5 @@ rs-enumerate-devices
 ```
 同時啟動雙鏡頭
 ```bash
-ros2 launch realsense2_camera rs_dual_camera_launch.py   serial_no1:=_218622270498   serial_no2:=_218722270604
+ros2 launch realsense2_camera rs_dual_camera_launch.py   serial_no1:=_218622270498   serial_no2:=_218722270604 camera_name1:=cam1 camera_name2:=cam2  camera_namespace1:=cam1 camera_namespace2:=cam2
 ```
