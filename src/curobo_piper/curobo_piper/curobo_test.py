@@ -18,6 +18,8 @@ class TrajectoryService(Node):
             "joint1", "joint2", "joint3", "joint4",
             "joint5", "joint6", "joint7", "joint8"
         ]
+        
+        self.publisher = self.create_publisher(JointState, '/joint_custom_state', 10)
 
         self.declare_parameter('place_position_x', 0.12)
         self.declare_parameter('place_position_y', 0.04)
@@ -36,6 +38,7 @@ class TrajectoryService(Node):
         # 建立 ROS 服務
         self.srv = self.create_service(Trigger, 'trigger_plan', self.execute_trajectory_cb)
         self.get_logger().info('Trajectory service ready.')
+        self.get_logger().info(f'X:{self.place_position_x},Y:{self.place_position_y},Z:{self.place_position_z}')
 
     def initialize_motion_gen(self):
         world_config = {
@@ -71,6 +74,7 @@ class TrajectoryService(Node):
 
     def execute_trajectory_cb(self, request, response):
         self.get_logger().info("Received service request to start trajectory execution.")
+        
         self.trajectory = self.compute_trajectory()
 
         if self.trajectory is None:
@@ -106,3 +110,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+

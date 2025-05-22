@@ -30,7 +30,7 @@
       <geometry>
         <mesh filename="file:///opt/ros/humble/share/realsense2_description/meshes/d405.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="aluminum"/>
+
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.0078 -0.009 0"/>

@@ -77,7 +77,7 @@ aluminum peripherial evaluation case.
         <geometry>
 	        <mesh filename="file://$(find realsense2_description)/meshes/d405.stl" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="aluminum"/>
+        <material name="aluminum"/> 
       </visual>
       <collision>
         <origin xyz="${d405_zero_depth_to_glass-d405_cam_depth/2} ${-d405_cam_depth_py} 0" rpy="0 0 0"/>

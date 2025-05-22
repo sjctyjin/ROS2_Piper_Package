@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot name="combined_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入兩個機器人的Xacro文件 -->
+  <xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.xacro"/>
+  <xacro:include filename="$(find scout_description)/urdf/scout_v2.xacro"/>
+  <!-- <xacro:include filename="$(find piper_description)/urdf/piper_description.xacro"/>-->
+    <!-- 引入 piper_arm_macro.xacro-->
+      <xacro:include filename="$(find realsense2_description)/urdf/_materials.urdf.xacro" />
+<xacro:include filename="$(find piper_description)/urdf/piper_description_d405_marco.xacro"/>
+  <!-- 引入相機的Xacro文件 -->
+<xacro:include filename="$(find realsense_custom_description)/urdf/piper_double_d405_camera.urdf.xacro"/>
+  <!-- 定義統一的父連接點 -->
+  <link name="combined_base">
+    <inertial>
+      <mass value="200"/>
+      <inertia ixx="20" iyy="20" izz="20" ixy="0" iyz="0" ixz="0"/>
+    </inertial>
+  </link>
+
+
+
+<!-- 在 link3_1_v1_1 左邊掛載第一支手臂 -->
+  <xacro:piper_arm
+    prefix="arm1"
+    parent_link="link3_1_v1_1"
+    xyz="0.0 -0.20 0.05"
+    rpy="0 0 0"/>
+ <!-- 第1台相機：掛在 arm1link6 -->
+    
+  <xacro:d405_camera
+    prefix="cam1"
+    parent_link="arm1_link6"
+    x="-0.06092" y="0.00551" z="0.030946"
+    roll="-0.29119" pitch="0.016918" yaw="-1.6641"
+    use_nominal_extrinsics="false"/>
+  <!-- 在 link3_1_v1_1 右邊掛載第二支手臂  -->
+  <xacro:piper_arm
+    prefix="arm2"
+    parent_link="link3_1_v1_1"
+   xyz="0.0 0.20 0.05"
+    rpy="0 0 0"/>
+    <!-- 第2台相機：掛在 arm2link6 -->
+    <!---->
+    
+  <xacro:d405_camera
+    prefix="cam2"
+    parent_link="arm2_link6"
+    x="-0.06092" y="0.00551" z="0.030946"
+    roll="-0.29119" pitch="0.016918" yaw="-1.6641"
+    use_nominal_extrinsics="false"/>
+    
+    
+ <!-- Piper 機器人連接 
+  <joint name="zyx_piper_base_joint" type="fixed">
+    <origin xyz="0.0 -0.5 0.0" rpy="1.57 1.57 0"/>
+    <parent link="link3_1_v1_1"/>
+    <child link="Piper_base_link"/>
+  </joint>-->
+  
+  <!-- zyx_R_1 機器人連接 -->
+  <joint name="zyx_R_1_base_joint" type="fixed">
+    <origin xyz="0.38 -0.14 0.19" rpy="0 0 0"/>
+    <parent link="combined_base"/>
+    <child link="zyx_R_1_base_link"/>
+  </joint>
+
+  <!-- scout_v2 機器人連接 -->
+  <joint name="scout_v2_base_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="combined_base"/>
+    <child link="base_link"/>
+    <!--child link="scout_v2_base_link"/-->
+  </joint>
+
+</robot>
+

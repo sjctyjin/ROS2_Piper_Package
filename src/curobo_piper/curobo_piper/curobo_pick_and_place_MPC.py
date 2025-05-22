@@ -203,7 +203,7 @@ class PickAndPlaceNode(Node):
         positions_with_gripper[6] = gripper_value  # joint7是夹爪
         msg.position = positions_with_gripper
         #self.get_logger().info(f"joint_positions直－－－－－ ：{positions_with_gripper}")
-        msg.velocity = [10.0] * len(self.joint_names)
+        msg.velocity = [10] * len(self.joint_names)
         # 发布到ROS2
         self.publisher.publish(msg)
         #self.get_logger().info(f"夾爪直－－－－－ ：{gripper_value}")

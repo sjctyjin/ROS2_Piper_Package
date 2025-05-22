@@ -121,8 +121,8 @@ class CameraYoloProcessor(Node):
             pixel_y = int((y1 + y2) / 2)
             depth = self.depth_image[pixel_y, pixel_x] / 1000.0
             
-            if depth < 1.4:
-                if conf > 0.6:
+            if depth < 0.8:
+                if conf > 0.9:
                 # 獲取深度值
                     if conf > best_conf:
                         self.get_logger().warning(f"最佳直-{conf}")
@@ -138,7 +138,7 @@ class CameraYoloProcessor(Node):
             #     continue
             pixel_x = int((x1 + x2) / 2)
             pixel_y = int((y1 + y2) / 2)
-            if conf > 0.6:
+            if conf > 0.9:
                 # 獲取深度值
                 depth = self.depth_image[pixel_y, pixel_x] / 1000.0  # 假設深度以毫米為單位，轉換為米
                 if depth == 0:

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot name="combined_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入兩個機器人的Xacro文件 -->
+  <xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.xacro"/>
+  <xacro:include filename="$(find scout_description)/urdf/scout_v2.xacro"/>
+  <xacro:include filename="$(find piper_description)/urdf/piper_description.xacro"/>
+
+  <!-- 定義統一的父連接點 -->
+  <link name="combined_base">
+    <inertial>
+      <mass value="200"/>
+      <inertia ixx="20" iyy="20" izz="20" ixy="0" iyz="0" ixz="0"/>
+    </inertial>
+  </link>
+
+ <!-- Piper 機器人連接 -->
+  <joint name="zyx_piper_base_joint" type="fixed">
+    <origin xyz="0.0 0 0.0" rpy="1.57 1.57 0"/>
+    <parent link="link3_1_v1_1"/>
+    <child link="Piper_base_link"/>
+  </joint>
+  
+  <!-- zyx_R_1 機器人連接 -->
+  <joint name="zyx_R_1_base_joint" type="fixed">
+    <origin xyz="0.38 -0.14 0.19" rpy="0 0 0"/>
+    <parent link="combined_base"/>
+    <child link="zyx_R_1_base_link"/>
+  </joint>
+
+  <!-- scout_v2 機器人連接 -->
+  <joint name="scout_v2_base_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="combined_base"/>
+    <child link="base_link"/>
+    <!--child link="scout_v2_base_link"/-->
+  </joint>
+
+</robot>
+

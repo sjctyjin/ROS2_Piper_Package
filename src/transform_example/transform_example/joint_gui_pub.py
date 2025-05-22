@@ -54,6 +54,7 @@ class JointRelayNode(Node):
 
     def timer_callback(self):
         if self.latest_joint_state is None:
+            self.get_logger().debug(f"last_joint_ empty")
             return
 
         relay_msg = JointState()

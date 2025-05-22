@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
              'joint_gui_pubs = transform_example.joint_gui_pub:main',#座標發布啟動robot
+             'joint_gui_pub_dual = transform_example.joint_gui_pub_dual:main',
              'transform_point = transform_example.transform_point:main',#將yolov8_point輸出的座標結果轉換為base_link的相關座標
              'detection_to_moveit = transform_example.object_pose_planner:main',#將取得的物件座標轉換到手臂執行器
              'pose_point          = transform_example.pose_point:main',#POST座標發布範例
@@ -44,6 +45,7 @@ setup(
         ],
     },
 )
+
 
 
 
