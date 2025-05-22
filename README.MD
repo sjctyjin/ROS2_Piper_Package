@@ -56,6 +56,10 @@ bash can_activate.sh can_piper_2 1000000 "3-6.3:1.0"
 ros2 launch piper start_single_piper.launch.py can_port:=can_piper_1
 ros2 launch piper start_single_piper.launch.py can_port:=can_piper_2
 ```
+雙臂同時啟動請參考
+
+https://github.com/sjctyjin/ROS2_Piper_Package/blob/piper_official_humble/src/Dual-arm-robot/README.md
+
 ### 2. 啟動realsense ros節點
 ```bash
 ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
