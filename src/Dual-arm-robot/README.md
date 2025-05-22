@@ -15,8 +15,8 @@ ros2 launch realsense2_camera rs_launch.py \
   pointcloud.enable:=true \
   align_depth.enable:=true
 
-ros2 launch realsense2_camera rs_launch.py camera_name:=cam1 serial_no:=_218622270498
-
+ros2 launch realsense2_camera rs_launch.py camera_name:=cam1 serial_no:=_218622270498  pointcloud.enable:=true align_depth.enable:=true
+ros2 launch realsense2_camera rs_launch.py camera_name:=cam2 serial_no:=_218722270604  pointcloud.enable:=true align_depth.enable:=true
 ```
 查看相機序號
 ```bash
