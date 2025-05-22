@@ -1,20 +1,13 @@
-## clone
+## 啟動雙臂機器人Rviz
 ```bash
-mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-
-git clone https://github.com/sjctyjin/Dual-arm-robot.git
+ros2 launch scout_description piper_dual_arm.launch.py
 ```
-## 編譯專案
-```bash
-cd ..
-colcon build --symlink-install
-```
-
-## 啟動機器人Rviz
-```bash
-ros2 launch scout_description demo.launch.py
-```
-## 啟動moveit
-```bash
-ros2 launch scout_robot_moveit_config demo.launch.py
+## 啟動多個realsense鏡頭
+camera_name照urdf中定義的名稱去寫，cam1就對應cam1_link
+```base
+ros2 launch realsense2_camera rs_launch.py \
+  camera_name:=cam2 \
+  serial_no:=<你的相機序號> \
+  pointcloud.enable:=true \
+  align_depth.enable:=true
 ```
