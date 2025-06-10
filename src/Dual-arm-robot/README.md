@@ -32,13 +32,13 @@ ros2 launch realsense2_camera rs_dual_camera_launch.py   serial_no1:=_2186222704
 ```
 啟動偵測
 ```bash
-ros2 run transform_example yolov8_detect_dual --ros-args -p namespace:=cam1 -p arm:=arm1
+ros2 run transform_example yolov8_detect_dual --ros-args -p namespace:=cam1 -p arm:=arm1 
 
 ros2 run transform_example yolov8_detect_dual --ros-args -p namespace:=cam2 -p arm:=arm2
 ```
 啟動抓取放
 ```bash
-ros2 run curobo_piper curobo_pick_and_place_mpc_dual --ros-args -p arm_prefix:=arm1 -p cam_prefix:=cam1
+ros2 run curobo_piper curobo_pick_and_place_mpc_dual --ros-args -p arm_prefix:=arm1 -p cam_prefix:=cam1  -p is_left_arm:=True
 ```
 節點啟動後的topic總覽
 ```bash
