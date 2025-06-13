@@ -129,6 +129,19 @@ List of devices attached
 ros2 run curobo_piper curobo_vr_mpc
 
 ```
+
+## VR手柄遙操作(雙臂)
+
+```bash
+開啟雙臂控制節點，要注意can分的左手右手在哪
+ros2 launch scout_description piper_dual_arm.launch.py arm1_can_port:=can_piper_1 arm2_can_port:=can_piper_2
+
+# 啟動vr跟隨，分左右手
+ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=right
+ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=left
+
+
+```
 ### 下執行指令
 
 ```bash
