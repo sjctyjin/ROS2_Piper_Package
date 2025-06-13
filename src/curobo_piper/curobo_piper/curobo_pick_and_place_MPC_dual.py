@@ -51,6 +51,9 @@ class PickAndPlaceNode(Node):
         self.declare_parameter('arm_prefix', 'arm1')  # 新增: 關節前綴參數
         self.declare_parameter('cam_prefix', 'cam1')  # 新增: 相機前綴參數
         
+        self.declare_parameter('is_left_arm', False)  # 預設為右手臂
+
+        
         # 读取参数
         self.robot_config = self.get_parameter('robot_config').get_parameter_value().string_value
         self.enable_rosbridge = self.get_parameter('enable_rosbridge').get_parameter_value().bool_value
@@ -66,7 +69,20 @@ class PickAndPlaceNode(Node):
         self.arm_prefix = self.get_parameter('arm_prefix').get_parameter_value().string_value  # 取得前綴參數
         self.cam_prefix = self.get_parameter('cam_prefix').get_parameter_value().string_value  # 取得前綴參數
       
+        # 新增：取得左右手臂參數,左臂採摘 右臂輔助
+        self.is_left_arm = self.get_parameter('is_left_arm').get_parameter_value().bool_value
         
+        
+        # 根據左右手臂設定不同的四元數
+        if self.is_left_arm:
+            self.pick_quaternion = [0.881, 0.010, 0.472, 0.007]  # 左臂pick採摘四元數
+            self.home_quaternion = [0.597, -0.453, 0.588, 0.303]   # 左臂Home位置四元數
+            self.get_logger().info("設定為左手臂，使用左臂四元數")
+        else:
+            self.pick_quaternion = [0.560, 0.000, 0.829, -0.000,]  # 右臂pick協作四元數 (原始值)
+            self.home_quaternion = [0.685, 0.0, 0.729, 0.0]        # 右臂Home位置四元數 (原始值)
+            self.get_logger().info("設定為右手臂，使用右臂四元數")
+            
         # 初始化ROSBridge
         if self.enable_rosbridge:
             try:
@@ -464,14 +480,21 @@ class PickAndPlaceNode(Node):
             elif self.current_state == self.STATE_MOVE_TO_PICK:
                 # 创建目标姿态
                 self.get_logger().info("開始規劃")
-                target_pose = Pose.from_list([
-                    self.pick_position[0], self.pick_position[1], self.pick_position[2],
-                    self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
-                ])
                 
+                if self.is_left_arm == True:#左臂等待右臂完成抓定再移動
+                    target_pose = Pose.from_list([
+                        self.pick_position[0], self.pick_position[1], self.pick_position[2],
+                        self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
+                    ])
+                    time.sleep(2) 
+                else:#右臂直接移動
+                    target_pose = Pose.from_list([
+                        self.pick_position[0], self.pick_position[1], self.pick_position[2]+0.05,
+                        self.pick_quaternion[0], self.pick_quaternion[1], self.pick_quaternion[2], self.pick_quaternion[3]
+                    ])
                 # 规划并移动到抓取位置，夹爪保持打开
-                #if self.plan_and_execute(current_joint_positions, target_pose, self.gripper_open_value):
-                if self.plan_and_execute_mpc(current_joint_positions[:6], target_pose, self.gripper_open_value):                   
+                if self.plan_and_execute(current_joint_positions[:6], target_pose, self.gripper_open_value):
+                #if self.plan_and_execute_mpc(current_joint_positions[:6], target_pose, self.gripper_open_value):                   
                     self.current_state = self.STATE_GRASP
                     self.get_logger().info("規劃到夾取位置成功--- 等待2秒")
                     time.sleep(2.0)
@@ -540,6 +563,7 @@ class PickAndPlaceNode(Node):
                 # 这里使用一个略高于抓取位置的点作为HOME位置
                 
                 home_pose = Pose.from_list([
+
                     0.121, 0.0, 0.458,  # 预设的HOME位置
                     0.685, 0.0, 0.729, 0.0  # 默认方向
                 ])
@@ -594,18 +618,25 @@ class PickAndPlaceNode(Node):
         if self.gripper_data_event:
             self.gripper_check_timer += 1#避免無限迴圈
             if self.current_state == self.STATE_WATTING_GRIPPER:#判斷當前主線程是否在等待
-                    if self.pick_check == 1:
-                        self.get_logger().info("✅ 夾取成功，Pick_check = 1")
-                        self.current_state = self.STATE_MOVE_TO_PLACE
-                        self.previous_state = self.STATE_MOVE_TO_HOME
-                        self.pre_pick_check = self.pick_check#最後才shift                       
-                    else:
-                        self.get_logger().warn("❌ 夾取超時，Pick_check = 0")
+                    if self.is_left_arm == False:
                         self.current_state = self.STATE_MOVE_TO_HOME
                         self.pre_pick_check = self.pick_check#最後才shift 
+                        time.sleep(4)                              
+                        self.gripper_data_event = False                
+                        self.gripper_check_timer = 0
+                    else:    
+                        if self.pick_check == 1:
+                            self.get_logger().info("✅ 夾取成功，Pick_check = 1")
+                            self.current_state = self.STATE_MOVE_TO_PLACE
+                            self.previous_state = self.STATE_MOVE_TO_HOME
+                            self.pre_pick_check = self.pick_check#最後才shift                       
+                        else:
+                            self.get_logger().warn("❌ 夾取超時，Pick_check = 0")
+                            self.current_state = self.STATE_MOVE_TO_HOME
+                            self.pre_pick_check = self.pick_check#最後才shift 
                                                         
-                    self.gripper_data_event = False                
-                    self.gripper_check_timer = 0
+                        self.gripper_data_event = False                
+                        self.gripper_check_timer = 0
                 
             if self.gripper_check_timer >= 50:
                 self.gripper_check_timer = 0
