@@ -115,6 +115,20 @@ ros2 run curobo_piper curobo_test --ros-args -p place_position_x:=0.0 -p place_p
 ros2 run transform_example gripper_pose_joint
 
 ```
+
+## VR手柄遙操作(單臂)
+啟動手臂控制節點後，執行VR節點，啟動前須先確認adb device是否存在(Quest3插上typeC後接到電腦)
+```bash
+
+ros2 launch piper start_single_piper_rviz.launch.py
+
+adb devices. The expected output:
+List of devices attached
+    ce0551e7                device
+
+ros2 run curobo_piper curobo_vr_mpc
+
+```
 ### 下執行指令
 
 ```bash
