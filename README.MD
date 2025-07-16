@@ -140,6 +140,13 @@ ros2 launch scout_description piper_dual_arm.launch.py arm1_can_port:=can_piper_
 ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=right
 ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=left
 
+右手控制器:
+A : 回歸原點
+B : 開始跟蹤
+
+左手控制器:
+X : 回歸原點
+Y : 開始跟蹤
 
 ```
 ### 下執行指令
