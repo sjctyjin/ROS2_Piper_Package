@@ -10,8 +10,8 @@ class ImprovedDualArmJointRelayNode(Node):
         super().__init__('dual_arm_joint_relay_node')
         
         # 定義所有關節名稱類別
-        #self.chassis_joint_names = ['Z', 'Y', 'X', 'R', 'G']
-        #self.wheel_joint_names = ['front_right_wheel', 'front_left_wheel', 'rear_left_wheel', 'rear_right_wheel']
+        self.chassis_joint_names = ['Z', 'Y', 'X', 'R', 'G']
+        self.wheel_joint_names = ['front_right_wheel', 'front_left_wheel', 'rear_left_wheel', 'rear_right_wheel']
         self.arm1_joint_names = ['arm1_joint1', 'arm1_joint2', 'arm1_joint3', 'arm1_joint4', 
                                 'arm1_joint5', 'arm1_joint6', 'arm1_joint7', 'arm1_joint8']
         self.arm2_joint_names = ['arm2_joint1', 'arm2_joint2', 'arm2_joint3', 'arm2_joint4', 
@@ -103,28 +103,28 @@ class ImprovedDualArmJointRelayNode(Node):
         complete_msg.effort = []
         
         # 添加底盤關節
-        #chassis_positions = [0.0, 0.0, 0.0, 0.0, 0.0]  # Z, Y, X, R, G 的初始位置
-        #complete_msg.name.extend(self.chassis_joint_names)
-        #complete_msg.position.extend(chassis_positions)
-        #complete_msg.velocity.extend([0.0] * len(self.chassis_joint_names))
-        #complete_msg.effort.extend([0.0] * len(self.chassis_joint_names))
+        chassis_positions = [0.0, 0.0, 0.0, 0.0, 0.0]  # Z, Y, X, R, G 的初始位置
+        complete_msg.name.extend(self.chassis_joint_names)
+        complete_msg.position.extend(chassis_positions)
+        complete_msg.velocity.extend([0.0] * len(self.chassis_joint_names))
+        complete_msg.effort.extend([0.0] * len(self.chassis_joint_names))
         
         # 添加輪子關節
-        #wheel_positions = [0.0, 0.0, 0.0, 0.0]  # 四個輪子的初始位置
-        #complete_msg.name.extend(self.wheel_joint_names)
-        #complete_msg.position.extend(wheel_positions)
-        #complete_msg.velocity.extend([0.0] * len(self.wheel_joint_names))
-        #complete_msg.effort.extend([0.0] * len(self.wheel_joint_names))
+        wheel_positions = [0.0, 0.0, 0.0, 0.0]  # 四個輪子的初始位置
+        complete_msg.name.extend(self.wheel_joint_names)
+        complete_msg.position.extend(wheel_positions)
+        complete_msg.velocity.extend([0.0] * len(self.wheel_joint_names))
+        complete_msg.effort.extend([0.0] * len(self.wheel_joint_names))
         
         # 添加左臂關節
-        arm1_positions = [0.0, 0.75, -1.1, 0.0, 0.5, 0.0, 0.035, 0.0]  # 左臂初始位置
+        arm1_positions = [0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]  # 左臂初始位置
         complete_msg.name.extend(self.arm1_joint_names)
         complete_msg.position.extend(arm1_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm1_joint_names))
         complete_msg.effort.extend([0.0] * len(self.arm1_joint_names))
         
         # 添加右臂關節
-        arm2_positions = [0.0, 0.75, -1.1, 0.0, 0.5, 0.0, 0.035, 0.0]  # 右臂初始位置
+        arm2_positions = [-0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]  # 右臂初始位置
         complete_msg.name.extend(self.arm2_joint_names)
         complete_msg.position.extend(arm2_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm2_joint_names))

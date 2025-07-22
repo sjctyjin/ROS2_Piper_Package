@@ -231,7 +231,7 @@ class PickAndPlaceNode(Node):
                 self.get_logger().warning(f"找不到关节 {name}，使用默认值0.0")
                 current_joint_positions.append(0.0)
         self.current_joint_positions_globel = current_joint_positions
-        
+        self.get_logger().info(f"current_joint 值  －－－－－ ：{self.current_joint_positions_globel}")
         # 等待一个时间步
         time.sleep(self.dt)
     

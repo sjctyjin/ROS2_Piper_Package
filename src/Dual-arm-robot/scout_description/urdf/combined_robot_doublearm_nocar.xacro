@@ -24,30 +24,40 @@
   <xacro:piper_arm
     prefix="arm1"
     parent_link="base_link"
-    xyz="0.0 -0.20 0.05"
-    rpy="0 0 0"/>
- <!-- 第1台相機：掛在 arm1link6 -->
+    xyz="0.0 -0.200 0.05"
+    rpy="3.14 0 0"/>
+    <!--rpy="0 0 0"/>-->
+ <!-- 第1台相機：掛在 arm1link6 
+       正手
+     x="-0.06092" y="0.00551" z="0.030946"
+    roll="-0.29119" pitch="0.016918" yaw="1.4759"
+ -->
     
   <xacro:d405_camera
     prefix="cam1"
     parent_link="arm1_link6"
-    x="-0.06092" y="0.00551" z="0.030946"
-    roll="-0.29119" pitch="0.016918" yaw="-1.6641"
+     x="-0.10152" y="0.00327" z="0.030479"
+    roll="0.29119" pitch="-0.020223" yaw="1.433"
     use_nominal_extrinsics="false"/>
   <!-- 在 link3_1_v1_1 右邊掛載第二支手臂  -->
   <xacro:piper_arm
     prefix="arm2"
     parent_link="base_link"
-   xyz="0.0 0.20 0.05"
-    rpy="0 0 0"/>
+   xyz="0.0 0.200 0.05"
+   rpy="3.14 0 0"/>
+    <!--  rpy="0 0 0"/> -->
     <!-- 第2台相機：掛在 arm2link6 -->
-    <!---->
+    <!--
+       正手
+     x="-0.06092" y="0.00551" z="0.030946"
+    roll="-0.29119" pitch="0.016918" yaw="1.4759"
+    -->
     
   <xacro:d405_camera
     prefix="cam2"
     parent_link="arm2_link6"
-    x="-0.06092" y="0.00551" z="0.030946"
-    roll="-0.29119" pitch="0.016918" yaw="-1.6641"
+    x="-0.10152" y="0.00327" z="0.030479"
+    roll="0.29119" pitch="-0.020223" yaw="1.57"
     use_nominal_extrinsics="false"/>
     
     

@@ -51,7 +51,7 @@ class VRMPCControlNode(Node):
         # ============ 配置參數 ============
         self.robot_config = 'piper.yml'
         self.vr_ip = '192.168.1.126'
-        self.use_usb = False
+        self.use_usb = True
         self.control_rate = 50.0
         self.gripper_sensitivity = 0.07
         self.gripper_open_value = -0.09
@@ -374,20 +374,23 @@ Window Geometry:
             t.header.stamp = self.get_clock().now().to_msg()
             t.header.frame_id = f'{self.arm}_base_link'
             t.child_frame_id = child_frame_id
-            
+            if self.hand == "left":
             # 位置
-            t.transform.translation.x = float(transform_matrix[0, 3])+0.05
-            t.transform.translation.y = float(transform_matrix[1, 3])
-            t.transform.translation.z = float(transform_matrix[2, 3])+0.7
-            
-            # 旋轉矩陣轉四元數
+                t.transform.translation.x = float(transform_matrix[0, 3])+0.121
+                t.transform.translation.y = (float(transform_matrix[1, 3]))*-1
+                t.transform.translation.z = (float(transform_matrix[2, 3])-0.2)*-1
+            else:
+                t.transform.translation.x = float(transform_matrix[0, 3])+0.121
+                t.transform.translation.y = (float(transform_matrix[1, 3]+0.2))*-1
+                t.transform.translation.z = (float(transform_matrix[2, 3])-0.2)*-1
+            # 旋轉矩陣轉由拉腳
             R = transform_matrix[:3, :3]
             Rx_90 = np.array([
                 [1, 0, 0],
                 [0, 0, 1],
                 [0, -1, 0]
             ])
-            theta = np.deg2rad(-45)  # 將角度轉為弧度
+            theta = np.deg2rad(-60)  # 將角度轉為弧度
             Ry_45 = np.array([
                 [ np.cos(theta),  0, np.sin(theta)],
                 [ 0,              1, 0],
@@ -395,6 +398,14 @@ Window Geometry:
             ])
             R = R @ Rx_90
             R = R @ Ry_45
+            #rots = Rot.from_matrix(R)
+            
+            # 轉成 euler
+            #euler = rot.as_euler('xyz', degrees=False)   # 'xyz' 順序可自訂
+            
+            #R[1] = -R[1]
+            # 再轉回四元數
+            #new_rot = R.from_euler('xyz', euler, degrees=False)
             trace = np.trace(R)
             
             if trace > 0:
@@ -642,7 +653,7 @@ Window Geometry:
             else:
                 self.current_gripper_value = -0.09
                 
-            self.get_logger().info(f"夾爪直 ： {self.current_gripper_value}")
+            #self.get_logger().info(f"夾爪直 ： {self.current_gripper_value}")
             # A鍵：設置參考位置
             if a_pressed and not self.last_a_state:
                 for name in self.motion_gen.kinematics.joint_names:
@@ -665,7 +676,16 @@ Window Geometry:
                     msg = JointState()
                     msg.header.stamp = self.get_clock().now().to_msg()
                     msg.name = self.joint_names       
-                    msg.position = [0.0, 0.75, -1.1, 0.0, 0.5, 0.0, 0.035, 0.0]
+                    #if self.hand == "right":
+                    #    msg.position = [-0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]
+                    #else:
+                    #    msg.position = [0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]
+                        
+                    if self.hand == "right":
+                        msg.position = [-0.2, 1.1, -0.9, 0.8,-0.3, -0.8, -0.04, 0.04]
+                    else:
+                        msg.position = [0.4, 1.1, -0.9, -0.8, -0.3, 0.0, -0.04, 0.04]
+                    msg.velocity = [10.0] * len(self.joint_names)
                     msg.velocity = [10.0] * len(self.joint_names)
             
                     self.joint_publisher.publish(msg)
@@ -758,7 +778,7 @@ Window Geometry:
                 
      
                     
-                    self.get_logger().info(f"📤 已發送 TF 座標至 WebSocket")
+                    self.get_logger().info(f"📤 已發送 TF 座標至 WebSocket - {TF_qw},{TF_qx},{TF_qy},{TF_qz}")
             
                 except:
                     self.get_logger().info(f"等待TF座標")
@@ -773,7 +793,7 @@ Window Geometry:
                 is_drift, reason = self.detect_drift(position)
                 
                 if not is_drift:
-                    self.VR_R_TF_publisher.publish(trans)
+                    self.VR_R_TF_publisher.publish(trans) # Rosbridge
                     
                     
                     # 提取當前姿態
@@ -805,7 +825,8 @@ Window Geometry:
                         #)
                         
                         ik_goal = Pose(
-                            position=self.tensor_args.to_device([float(TF_x),float(TF_y),float(TF_z)]),
+                            #position=self.tensor_args.to_device([float(TF_x),float(TF_y),float(TF_z)]),
+                            position=self.tensor_args.to_device([float(0.255),float(0.05),float(0.5203)]),
                             quaternion=self.tensor_args.to_device([TF_qw, TF_qx, TF_qy,TF_qz]),
                         )
                         #goal = Goal(current_state=cu_js, goal_state=cu_js, goal_pose=ik_goal)

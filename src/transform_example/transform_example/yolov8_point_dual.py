@@ -198,7 +198,7 @@ class CameraYoloProcessor(Node):
         t.child_frame_id = child_frame_id
         t.transform.translation.x = translation[0] 
         t.transform.translation.y = translation[1] 
-        t.transform.translation.z = (translation[2]-0.1)
+        t.transform.translation.z = (translation[2])
         t.transform.rotation.x = float(rotation[0])
         t.transform.rotation.y = float(rotation[1])
         t.transform.rotation.z = float(rotation[2])
@@ -242,7 +242,7 @@ class CameraYoloProcessor(Node):
             
             # 補 Z 軸旋轉 90 度
             q_orig = Rs.from_quat(quaternion) 
-            q_z90 = Rs.from_euler('z', 90, degrees=True)
+            q_z90 = Rs.from_euler('z', -90, degrees=True)
             q_new = q_orig * q_z90
             quaternion_fixed = q_new.as_quat()
             

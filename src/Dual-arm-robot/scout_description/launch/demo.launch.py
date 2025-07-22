@@ -37,6 +37,13 @@ def generate_launch_description():
         output="screen",
         parameters=[robot_description],
     )
+    pub_state_publisher_node = launch_ros.actions.Node(
+        package="transform_example",
+        executable="joint_gui_pub_dual",
+        output="screen",
+        parameters=[robot_description],
+    )
+
 
     rviz_node = launch_ros.actions.Node(
         package="rviz2",
@@ -56,6 +63,7 @@ def generate_launch_description():
     return LaunchDescription([
         robot_state_publisher_node,
         rviz_node,
+        #pub_state_publisher_node
         #joint_state_publisher_gui_node
     ])
 

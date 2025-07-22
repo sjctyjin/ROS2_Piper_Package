@@ -335,6 +335,14 @@
       <limit lower="-0.035" upper="0" effort="10" velocity="1" />
     </joint>
     
+    <link name="${prefix}_gripper_point"/>
+<joint name="${prefix}_gripper_points" type="fixed">
+   <origin xyz="-0.0 0.0 0.11" rpy="-0.0 0.0 -0.0"/>
+    <parent link="${prefix}_link6"/>
+    <child link="${prefix}_gripper_point"/>
+</joint>
+  
+
    
     
   </xacro:macro>

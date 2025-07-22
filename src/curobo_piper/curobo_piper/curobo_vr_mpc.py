@@ -37,7 +37,7 @@ class VRMPCControlNode(Node):
         # ============ 配置參數 ============
         self.robot_config = 'piper.yml'
         self.vr_ip = '192.168.1.126'
-        self.use_usb = False
+        self.use_usb = True
         self.control_rate = 50.0
         self.gripper_sensitivity = 0.07
         self.gripper_open_value = -0.09
@@ -362,9 +362,9 @@ Window Geometry:
             t.child_frame_id = child_frame_id
             
             # 位置
-            t.transform.translation.x = float(transform_matrix[0, 3])
+            t.transform.translation.x = float(transform_matrix[0, 3])+0.121
             t.transform.translation.y = float(transform_matrix[1, 3])
-            t.transform.translation.z = float(transform_matrix[2, 3])+0.5
+            t.transform.translation.z = float(transform_matrix[2, 3])+0.458
             
             # 旋轉矩陣轉四元數
             R = transform_matrix[:3, :3]
@@ -481,8 +481,8 @@ Window Geometry:
         base_matrix = create_matrix(*base_pose[:6])
         
         # 工作空間偏移
-        #offset_matrix = create_matrix(0.121, 0.000, 0.458, 0, 0, 0)
-        offset_matrix = create_matrix(0.0, 0.000, 0.0, 0, 0, 0)
+        offset_matrix = create_matrix(0.121, 0.000, 0.458, 0, 0, 0)
+        #offset_matrix = create_matrix(0.0, 0.000, 0.0, 0, 0, 0)
         # 當前矩陣
         current_matrix = create_matrix(*current_pose[:6])
         
@@ -683,11 +683,11 @@ Window Geometry:
                 self.past_pose = None
                 res = self.mpc.step(cu_js, max_attempts=2)
                 
-                if res.metrics.feasible.item():
-                    next_joints = res.js_action.position.cpu().numpy()
-                    self.publish_joint_state(next_joints, self.current_gripper_value)
-                else:
-                    self.get_logger().warn("MPC軌跡不可行")
+                #if res.metrics.feasible.item():
+                #    next_joints = res.js_action.position.cpu().numpy()
+                #    self.publish_joint_state(next_joints, self.current_gripper_value)
+                #else:
+                #    self.get_logger().warn("MPC軌跡不可行")
 
 
                 self.get_logger().info("🏠 參考位置已設置")
@@ -733,7 +733,7 @@ Window Geometry:
                 #t.transform.translation.x = float(transform_matrix[0, 3])
                 #t.transform.translation.y = float(transform_matrix[1, 3])
                 #t.transform.translation.z = float(transform_matrix[2, 3])+0.5
-                position = [float(TF_x),float(TF_y),float(TF_z)+0.5]#adjusted_transform[:3, 3]
+                position = [float(TF_x)+0.121,float(TF_y),float(TF_z)+0.458]#adjusted_transform[:3, 3]
                 
                 # 漂移檢測
                 is_drift, reason = self.detect_drift(position)

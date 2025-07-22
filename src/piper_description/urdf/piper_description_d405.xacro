@@ -22,6 +22,14 @@
     <child link="d405_base_link"/>
 </joint>
 
+
+<link name="gripper_point"/>
+<joint name="gripper_points" type="fixed">
+      <!--<origin xyz="-0.064868 0.014226 0.029185" rpy="-0.283249 0.012335 -1.670768"/> -->
+   <origin xyz="-0.0 0.0 0.11" rpy="-0.0 0.0 -0.0"/>
+    <parent link="link6"/>
+    <child link="gripper_point"/>
+</joint>
   
 
 <!-- arm -->
