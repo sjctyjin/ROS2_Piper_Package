@@ -16,9 +16,11 @@ class ImprovedDualArmJointRelayNode(Node):
                                 'arm1_joint5', 'arm1_joint6', 'arm1_joint7', 'arm1_joint8']
         self.arm2_joint_names = ['arm2_joint1', 'arm2_joint2', 'arm2_joint3', 'arm2_joint4', 
                                 'arm2_joint5', 'arm2_joint6', 'arm2_joint7', 'arm2_joint8']
-        
+        # 🆕 加入第三隻手臂的關節名稱
+        self.arm3_joint_names = ['dummy_joint1', 'dummy_joint2', 'dummy_joint3', 
+                                'dummy_joint4', 'dummy_joint5','dummy_joint6']
         # 合併的關節名稱列表
-        self.combined_joint_names = self.arm1_joint_names + self.arm2_joint_names
+        self.combined_joint_names = self.arm1_joint_names + self.arm2_joint_names + self.arm3_joint_names 
         
         # 完整的機器人關節名稱列表
         #self.all_joint_names = self.chassis_joint_names + self.wheel_joint_names + self.combined_joint_names
@@ -32,7 +34,9 @@ class ImprovedDualArmJointRelayNode(Node):
         
         # 發布者: 為每個手臂創建獨立的發布者，以及合併的 joint_states 發布者
         self.arm1_publisher = self.create_publisher(JointState, '/arm1/joint_states', 10)
-        self.arm2_publisher = self.create_publisher(JointState, '/arm2/joint_states', 10)
+        self.arm2_publisher = self.create_publisher(JointState, '/arm2/joint_states', 10)     
+           
+        self.arm3_publisher = self.create_publisher(JointState, '/arm3/joint_states', 10)
         self.joint_states_publisher = self.create_publisher(JointState, '/joint_states', 10)
         self.joint_states_publisher_cus = self.create_publisher(JointState, '/joint_custom_state', 10)
         
@@ -50,7 +54,13 @@ class ImprovedDualArmJointRelayNode(Node):
             self.arm2_custom_joint_callback,
             10
         )
-        
+        # 🆕 第三隻手臂的訂閱者
+        self.subscription_arm3_custom = self.create_subscription(
+            JointState,
+            '/arm3/joint_custom_state',
+            self.arm3_custom_joint_callback,
+            10
+        )
         # 向後兼容: 訂閱原始的 joint_custom_state (用於一次控制所有關節)
         self.subscription_combined_custom = self.create_subscription(
             JointState,
@@ -77,7 +87,8 @@ class ImprovedDualArmJointRelayNode(Node):
         # 跟踪最新的手臂狀態
         self.latest_arm1_state = None
         self.latest_arm2_state = None
-        
+        # 🆕 第三隻手臂的狀態
+        self.latest_arm3_state = None
         #
         
         # 初始化的動作
@@ -130,6 +141,13 @@ class ImprovedDualArmJointRelayNode(Node):
         complete_msg.velocity.extend([0.0] * len(self.arm2_joint_names))
         complete_msg.effort.extend([0.0] * len(self.arm2_joint_names))
         
+        # 🆕 添加第三隻手臂關節
+        arm3_positions = [0.0, 0.0, 0.0, 0.0, 0.0,0.0]  # 第三隻手臂初始位置 (5個關節)
+        complete_msg.name.extend(self.arm3_joint_names)
+        complete_msg.position.extend(arm3_positions)
+        complete_msg.velocity.extend([0.0] * len(self.arm3_joint_names))
+        complete_msg.effort.extend([0.0] * len(self.arm3_joint_names))
+        
         # 發布完整的關節狀態到 /joint_states
         self.joint_states_publisher.publish(complete_msg)
         self.joint_states_publisher_cus.publish(complete_msg)
@@ -158,8 +176,14 @@ class ImprovedDualArmJointRelayNode(Node):
         arm2_msg.effort = [0.0] * len(self.arm2_joint_names)
         self.arm2_publisher.publish(arm2_msg)
         
-        #self.latest_arm1_state = arm1_msg
-        #self.latest_arm2_state = arm2_msg
+        # 🆕 第三隻手臂的初始狀態
+        arm3_msg = JointState()
+        arm3_msg.header.stamp = self.get_clock().now().to_msg()
+        arm3_msg.name = self.arm3_joint_names
+        arm3_msg.position = arm3_positions
+        arm3_msg.velocity = [0.0] * len(self.arm3_joint_names)
+        arm3_msg.effort = [0.0] * len(self.arm3_joint_names)
+        self.arm3_publisher.publish(arm3_msg)
         
         self.init_timer += 1
         self.get_logger().info(f"🚀 已發送{self.init_timer}次完整的初始關節狀態")
@@ -268,7 +292,42 @@ class ImprovedDualArmJointRelayNode(Node):
         #self.arm2_publisher.publish(arm2_msg)
         
         self.get_logger().debug(f"🔄 轉發右臂自定義關節命令: {arm2_msg.name}")
-    
+    # 🆕 第三隻手臂的回調函數
+    def arm3_custom_joint_callback(self, msg: JointState):
+        """處理第三隻手臂的自定義關節命令"""
+        arm3_msg = JointState()
+        arm3_msg.header.stamp = self.get_clock().now().to_msg()
+        arm3_msg.name = []
+        arm3_msg.position = []
+        
+        for i, name in enumerate(msg.name):
+            # 處理關節名稱，支援 'Revolute 1' 或 'arm3_Revolute_1' 格式
+            if not name.startswith('arm3_'):
+                # 將空格替換為底線並加上前綴
+                clean_name = name.replace(' ', '_')
+                prefixed_name = f'arm3_{clean_name}'
+            else:
+                prefixed_name = name
+                
+            arm3_msg.name.append(prefixed_name)
+            
+            if i < len(msg.position):
+                arm3_msg.position.append(msg.position[i])
+        
+        if msg.velocity:
+            arm3_msg.velocity = msg.velocity
+        else:
+            arm3_msg.velocity = [0.0] * len(arm3_msg.name)
+            
+        if msg.effort:
+            arm3_msg.effort = msg.effort
+        else:
+            arm3_msg.effort = [0.0] * len(arm3_msg.name)
+            
+        self.latest_arm3_state = arm3_msg
+        self.update_joint_state(arm3_msg)
+        self.get_logger().debug(f"🔄 轉發第三隻手臂自定義關節命令: {arm3_msg.name}")
+        
     def combined_custom_joint_callback(self, msg: JointState):
         """處理合併的自定義關節命令 (控制所有關節，包括底盤、輪子和雙臂)"""
         # 先更新完整的關節狀態，確保所有關節都被保留
@@ -288,7 +347,13 @@ class ImprovedDualArmJointRelayNode(Node):
         arm2_msg.position = []
         arm2_msg.velocity = []
         arm2_msg.effort = []
-        
+        # 🆕 第三隻手臂的訊息
+        arm3_msg = JointState()
+        arm3_msg.header.stamp = self.get_clock().now().to_msg()
+        arm3_msg.name = []
+        arm3_msg.position = []
+        arm3_msg.velocity = []
+        arm3_msg.effort = []
         # 分類關節
         for i, name in enumerate(msg.name):
             # 左臂關節
@@ -322,6 +387,21 @@ class ImprovedDualArmJointRelayNode(Node):
                     arm2_msg.velocity.append(msg.velocity[i])
                 if msg.effort and i < len(msg.effort):
                     arm2_msg.effort.append(msg.effort[i])
+            # 🆕 第三隻手臂關節
+            elif name.startswith('arm3_') or name.startswith('Revolute'):
+                if name.startswith('Revolute'):
+                    clean_name = name.replace(' ', '_')
+                    arm_name = f'arm3_{clean_name}'
+                else:
+                    arm_name = name
+                    
+                arm3_msg.name.append(arm_name)
+                if i < len(msg.position):
+                    arm3_msg.position.append(msg.position[i])
+                if msg.velocity and i < len(msg.velocity):
+                    arm3_msg.velocity.append(msg.velocity[i])
+                if msg.effort and i < len(msg.effort):
+                    arm3_msg.effort.append(msg.effort[i]) 
         
         # 補充缺失的字段
         def fill_missing_fields(msg):
@@ -333,6 +413,7 @@ class ImprovedDualArmJointRelayNode(Node):
         
         arm1_msg = fill_missing_fields(arm1_msg)
         arm2_msg = fill_missing_fields(arm2_msg)
+        arm3_msg = fill_missing_fields(arm3_msg)
         
         # 發布到各自的 joint_states 話題
         if arm1_msg.name:
@@ -345,6 +426,10 @@ class ImprovedDualArmJointRelayNode(Node):
             self.latest_arm2_state = arm2_msg
         #    self.get_logger().debug(f"🔄 發送到右臂: {len(arm2_msg.name)}個關節")
         
+        # 🆕 第三隻手臂的發布
+        if arm3_msg.name:
+            self.latest_arm3_state = arm3_msg
+            
         # 發布完整狀態到 /joint_states
         self.joint_states_publisher.publish(self.complete_joint_state)
     
@@ -365,22 +450,26 @@ class ImprovedDualArmJointRelayNode(Node):
         
         if self.latest_arm2_state:        
             self.arm2_publisher.publish(self.latest_arm2_state)
-        
-        
-        
+            
+        # 🆕 第三隻手臂的定時發布
+        if self.latest_arm3_state:
+            self.arm3_publisher.publish(self.latest_arm3_state)
             
         
         # 可選的調試日誌
         if self.get_parameter('log_level').get_parameter_value().string_value.upper() == 'DEBUG':
             arm1_joints = [j for j in self.complete_joint_state.name if j.startswith('arm1_')]
             arm2_joints = [j for j in self.complete_joint_state.name if j.startswith('arm2_')]
+            # 🆕
+            arm3_joints = [j for j in self.complete_joint_state.name if j.startswith('arm3_')]  
+
             chassis_joints = [j for j in self.complete_joint_state.name if j in self.chassis_joint_names]
             wheel_joints = [j for j in self.complete_joint_state.name if j in self.wheel_joint_names]
             
             self.get_logger().debug(
                 f"📊 定時發布完整狀態: 總計{len(self.complete_joint_state.name)}個關節 "
                 f"(底盤:{len(chassis_joints)}, 輪子:{len(wheel_joints)}, "
-                f"左臂:{len(arm1_joints)}, 右臂:{len(arm2_joints)})"
+                f"左臂:{len(arm1_joints)}, 右臂:{len(arm2_joints)})"#, 第三臂:{len(arm3_joints)})"  # 🆕
             )
 
 
