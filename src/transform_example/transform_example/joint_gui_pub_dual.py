@@ -388,10 +388,10 @@ class ImprovedDualArmJointRelayNode(Node):
                 if msg.effort and i < len(msg.effort):
                     arm2_msg.effort.append(msg.effort[i])
             # 🆕 第三隻手臂關節
-            elif name.startswith('arm3_') or name.startswith('Revolute'):
+            elif name.startswith('arm3_') or name.startswith('dummy_'):
                 if name.startswith('Revolute'):
                     clean_name = name.replace(' ', '_')
-                    arm_name = f'arm3_{clean_name}'
+                    arm_name = f'dummy_{clean_name}'
                 else:
                     arm_name = name
                     
