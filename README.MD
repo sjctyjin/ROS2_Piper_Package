@@ -59,6 +59,15 @@ ros2 launch piper start_single_piper.launch.py can_port:=can_piper_2
 雙臂同時啟動請參考
 
 https://github.com/sjctyjin/ROS2_Piper_Package/blob/piper_official_humble/src/Dual-arm-robot/README.md
+```bash
+啟動雙臂(含底層節點)
+ros2 launch scout_description piper_dual_arm.launch.py arm1_can_port:=can_piper_1 arm2_can_port:=can_piper_2
+啟動dummy底層節點
+cd ~/github/dummy/src/dummy2_ws
+source install/setup.bash
+ros2 launch dummy2_can2eth dummy2_can2eth_server.launch.py
+
+```
 
 ### 2. 啟動realsense ros節點
 ```bash
