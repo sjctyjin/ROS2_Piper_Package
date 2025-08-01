@@ -125,7 +125,10 @@ ros2 launch piper start_single_piper_rviz.launch.py
 adb devices. The expected output:
 List of devices attached
     ce0551e7                device
-
+# wifi連線
+adb tcpip 5555
+adb shell ip route
+adb connect 192.168.1.126:5555
 ros2 run curobo_piper curobo_vr_mpc
 
 ```
