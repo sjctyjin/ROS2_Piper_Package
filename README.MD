@@ -140,8 +140,8 @@ ros2 run curobo_piper curobo_vr_mpc
 ros2 launch scout_description piper_dual_arm.launch.py arm1_can_port:=can_piper_1 arm2_can_port:=can_piper_2
 
 # 啟動vr跟隨，分左右手
-ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=right
-ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=left
+ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=right -p usb:=False
+ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=left -p usb:=False
 
 右手控制器:
 A : 回歸原點
