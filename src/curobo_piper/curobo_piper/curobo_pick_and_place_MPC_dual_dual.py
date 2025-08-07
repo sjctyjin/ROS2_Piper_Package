@@ -66,9 +66,11 @@ class PickAndPlaceNode(Node):
         self.is_left_arm = self.get_parameter('is_left_arm').get_parameter_value().bool_value
         
         if self.is_left_arm:
-            self.declare_parameter('robot_config', 'dual_piper_left.yml')
+            #self.declare_parameter('robot_config', 'dual_piper_left.yml') # 原始雙臂
+            self.declare_parameter('robot_config', 'trip_piper_left.yml') # 三手臂
         else:
-            self.declare_parameter('robot_config', 'dual_piper_right.yml')
+            #self.declare_parameter('robot_config', 'dual_piper_right.yml')
+            self.declare_parameter('robot_config', 'trip_piper_right.yml')
         # 读取参数
         self.robot_config = self.get_parameter('robot_config').get_parameter_value().string_value
         self.enable_rosbridge = self.get_parameter('enable_rosbridge').get_parameter_value().bool_value
@@ -245,28 +247,28 @@ class PickAndPlaceNode(Node):
         
         self.latest_joint_state_cb1 = msg
         
-        if "arm1_joint7" in msg.name:
-            idx = msg.name.index("arm1_joint7")
+        if "arm2_joint7" in msg.name:
+            idx = msg.name.index("arm2_joint7")
             arm1_joint7_pos = msg.position[idx]
             if arm1_joint7_pos == 0.0:
                 self.arm1_gripper_pos = 1 # 表示右手已抓住枝頭
             else:
                 self.arm1_gripper_pos = 0
-            #print(f"arm1_joint7 的位置是: {arm1_joint7_pos}")
+            #print(f"arm2_joint7 的位置是: {arm2_joint7_pos}")
         #self.get_logger().info(f"監聽JointState CB1: {self.latest_joint_state_cb1}\n訂閱內容 :{self.arm_prefix}/joint_states")
         
     def cb2(self, msg):
         """接收当前关节状态"""
         self.latest_joint_state_cb2 = msg
         
-        if "arm2_joint7" in msg.name:
-            idx = msg.name.index("arm2_joint7")
+        if "arm1_joint7" in msg.name:
+            idx = msg.name.index("arm1_joint7")
             arm2_joint7_pos = msg.position[idx]
             if arm2_joint7_pos == 0.0:
                 self.arm2_gripper_pos = 1 # 表示左手已抓住物體
             else:
                 self.arm2_gripper_pos = 0
-            print(f"arm2_joint7 的位置是: {arm2_joint7_pos}")
+            print(f"arm1_joint7 的位置是: {arm1_joint7_pos}")
         #self.get_logger().info(f"監聽JointState CB2: {self.latest_joint_state}\n訂閱內容 :{self.arm_prefix}/joint_states")
     	
     def timer_cb(self):
@@ -567,7 +569,7 @@ class PickAndPlaceNode(Node):
                 
                 try:
                     tf = self.tf_buffer.lookup_transform(
-                        f'base_link', f'cam1_object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
+                        f'base_link', f'cam3_object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
                     # ✅ 插入這段檢查 TF 是否新鮮
                     now = self.get_clock().now()
                     tf_time = tf.header.stamp
@@ -632,7 +634,7 @@ class PickAndPlaceNode(Node):
                 
                 if self.is_left_arm == True:#左臂等待右臂完成抓定再移動
                     target_pose = Pose.from_list([
-                        self.pick_position[0]-0.1, self.pick_position[1]+0.1, self.pick_position[2]-0.03,
+                        self.pick_position[0], self.pick_position[1], self.pick_position[2],
                         self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
                         #self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
                     ])
@@ -640,12 +642,12 @@ class PickAndPlaceNode(Node):
                     
                 else:#右臂直接移動
                     target_pose = Pose.from_list([
-                        self.pick_position[0], self.pick_position[1], self.pick_position[2]+0.05,
+                        self.pick_position[0], self.pick_position[1], self.pick_position[2],
                         self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
                         #self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
                     ])
                 # 规划并移动到抓取位置，夹爪保持打开
-                if self.is_left_arm == False and self.arm2_gripper_pos == 0: #右臂 確保左臂在工作原點
+                if self.is_left_arm == False and self.arm2_gripper_pos == 0: #右臂狀態:確保左臂在工作原點
                 
                     if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):
                         self.current_state = self.STATE_GRASP
@@ -655,7 +657,7 @@ class PickAndPlaceNode(Node):
                     # 规划失败，回到IDLE状态
                         self.current_state = self.STATE_IDLE
                         self.get_logger().error(f"規劃失敗")
-                elif self.is_left_arm == True and self.arm1_gripper_pos == 1:
+                elif self.is_left_arm == True and self.arm1_gripper_pos == 1:# 左臂
                     if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):                   
                         #self.current_state = self.STATE_GRASP#原本是直接夾取
                         self.current_state = self.STATE_REFINE_GRASP
@@ -873,10 +875,10 @@ class PickAndPlaceNode(Node):
         
         if self.is_left_arm:
 
-            send_to_msg[:6] = [-0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
+            send_to_msg[:6] = [0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
         else:
 
-            send_to_msg[:6] = [0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
+            send_to_msg[:6] = [-0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
         
         msg.position = send_to_msg
 

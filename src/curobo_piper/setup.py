@@ -29,7 +29,7 @@ setup(
          'curobo_pick_and_place_mpc_dual = curobo_piper.curobo_pick_and_place_MPC_dual:main',#curobo MPC計算軌跡 抓取放(雙臂)
          'curobo_pick_and_place_mpc_dual_dual = curobo_piper.curobo_pick_and_place_MPC_dual_dual:main',# 計算雙臂碰撞
          'curobo_vr_mpc = curobo_piper.curobo_vr_mpc:main',#透過quest3手柄 搖操作-單臂  ros2 run curobo_piper curobo_vr_mpc
-         ''
+         'curobo_dual_arm_mpc_tracker = curobo_piper.curobo_dual_arm_mpc_tracker:main',#雙臂mpc持續跟蹤
          'curobo_vr_mpc_dual = curobo_piper.curobo_vr_mpc_dual:main',#透過quest3手柄 搖操作-雙臂 ros2 run curobo_piper curobo_vr_mpc --ros-args -p hand:=right
         ],
     },

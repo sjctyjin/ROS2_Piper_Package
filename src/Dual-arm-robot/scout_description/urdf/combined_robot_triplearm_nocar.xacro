@@ -13,6 +13,7 @@
 <xacro:include filename="$(find piper_description)/urdf/piper_description_d405_marco.xacro"/>
   <!-- 引入相機的Xacro文件 -->
 <xacro:include filename="$(find realsense_custom_description)/urdf/piper_double_d405_camera.urdf.xacro"/>
+<xacro:include filename="$(find realsense_custom_description)/urdf/piper_d435i_camera.urdf.xacro"/>
   <!-- 定義統一的父連接點 
   <link name="base_link">
     <inertial>
@@ -23,12 +24,12 @@
 -->
 <link name="base_link">
   <inertial>
-    <origin xyz="-0.0023454168511469727 -7.5124051764860745e-06 -0.20653047899548718" rpy="0 0 0"/>
+    <origin xyz="-0.0023454168511469727 -7.5124051764860745e-06 0.99353047899548718" rpy="0 0 0"/>
     <mass value="37.77937726543091"/>
     <inertia ixx="2.333472" iyy="2.671087" izz="0.432453" ixy="-7e-06" iyz="0.006346" ixz="0.021116"/>
   </inertial>
   <visual>
-    <origin xyz="0 0 0" rpy="0 0 -1.57"/>
+    <origin xyz="0 0 1.2" rpy="0 0 -1.57"/>
     <geometry>
       <!-- <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/> -->
       <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
@@ -36,9 +37,9 @@
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="0 0 0" rpy="0 0 -1.57"/>
+    <origin xyz="0 0 1.2" rpy="0 0 -1.57"/>
     <geometry>
-      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -49,7 +50,7 @@
   <xacro:piper_arm
     prefix="arm1"
     parent_link="base_link"
-    xyz="0.0075 0.21 -0.075"
+    xyz="0.0075 0.205 1.23"
     rpy="3.14 0 0"/>
     <!--
   <xacro:piper_arm
@@ -74,7 +75,7 @@
    <xacro:piper_arm
     prefix="arm2"
     parent_link="base_link"
-   xyz="0.0075 -0.21 -0.075"
+   xyz="0.0075 -0.205 1.23"
    rpy="3.14 0 0"/>
   <!-- 在 link3_1_v1_1 右邊掛載第二支手臂  
   
@@ -100,109 +101,157 @@
     roll="0.29119" pitch="-0.020223" yaw="1.57"
     use_nominal_extrinsics="false"/>
     
-    
-    
-    <link name="link1_v1_1">
+  <xacro:d435_camera
+    prefix="cam3"
+    parent_link="link7_v3_1"
+    x="0.0" y="0.016" z="0.030479"
+    roll="0.0" pitch="-0.0" yaw="1.57"
+    use_nominal_extrinsics="false"/>
+
+
+<link name="Gasket_v3_1">
   <inertial>
-    <origin xyz="-0.005698056046029529 0.00648616381647002 0.012857188251092194" rpy="0 0 0"/>
+    <origin xyz="-2.603155605204514e-13 0.04987462633751475 0.022990960314565406" rpy="0 0 0"/>
+    <mass value="0.5238023470564825"/>
+    <inertia ixx="0.000502" iyy="0.001735" izz="0.002234" ixy="-0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.0 0.05 -0.0708" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/Gasket_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.0 0.05 -0.0708" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/Gasket_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="dummy2_link0_v1_1">
+  <inertial>
+    <origin xyz="-2.0924404917193838e-07 0.05022651776226978 0.0543576583868397" rpy="0 0 0"/>
+    <mass value="3.5330582052606796"/>
+    <inertia ixx="0.006118" iyy="0.006527" izz="0.007083" ixy="-0.0" iyz="-3.1e-05" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.0 0.05 -0.0968" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/dummy2_link0_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.0 0.05 -0.0968" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/dummy2_link0_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_v1_1">
+  <inertial>
+    <origin xyz="-0.0056980560460293764 0.006486163816469591 0.012857188251092666" rpy="0 0 0"/>
     <mass value="0.4200298104778203"/>
     <inertia ixx="0.000188" iyy="0.000156" izz="0.000263" ixy="6.2e-05" iyz="-4.3e-05" ixz="2.7e-05"/>
   </inertial>
   <visual>
-    <origin xyz="0.0 0.0 -0.0815" rpy="0 0 0"/>
+    <origin xyz="-0.0 0.0 -0.1938" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="0.0 0.0 -0.0815" rpy="0 0 0"/>
+    <origin xyz="-0.0 0.0 -0.1938" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<link name="link2_3_v4_1">
+<link name="link2_3_v1_1">
   <inertial>
-    <origin xyz="0.01884442516054531 0.0019841485543513476 0.08366314329154632" rpy="0 0 0"/>
+    <origin xyz="0.01884442516054546 0.0019838262441634544 0.08366361341072012" rpy="0 0 0"/>
     <mass value="1.8966297326812738"/>
     <inertia ixx="0.00634" iyy="0.006744" izz="0.001194" ixy="-4e-06" iyz="6.4e-05" ixz="0.000771"/>
   </inertial>
   <visual>
-    <origin xyz="0.011639 -0.034477 -0.11" rpy="0 0 0"/>
+    <origin xyz="0.011639 -0.033067 -0.222015" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v4_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="0.011639 -0.034477 -0.11" rpy="0 0 0"/>
+    <origin xyz="0.011639 -0.033067 -0.222015" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v4_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<link name="link4_v3_1">
+<link name="link4_v1_1">
   <inertial>
-    <origin xyz="-0.010734927861478581 -0.02899910919329477 0.049078739095576474" rpy="0 0 0"/>
+    <origin xyz="-0.010734927861478451 -0.02899943150348267 0.04907920921475034" rpy="0 0 0"/>
     <mass value="0.9123222504571403"/>
     <inertia ixx="0.00082" iyy="0.000695" izz="0.00053" ixy="-4.2e-05" iyz="0.000139" ixz="8.7e-05"/>
   </inertial>
   <visual>
-    <origin xyz="-0.024011 -0.034477 -0.278" rpy="0 0 0"/>
+    <origin xyz="-0.024511 -0.033067 -0.390015" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="-0.024011 -0.034477 -0.278" rpy="0 0 0"/>
+    <origin xyz="-0.024511 -0.033067 -0.390015" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<link name="link5_v3_1">
+<link name="link5_v1_1">
   <inertial>
-    <origin xyz="-0.0050623285902477895 0.05998132886165671 0.0006226400248250941" rpy="0 0 0"/>
+    <origin xyz="-0.005062328590247655 0.05998100655146881 0.0006231101439988507" rpy="0 0 0"/>
     <mass value="1.0415582650622635"/>
     <inertia ixx="0.001817" iyy="0.000592" izz="0.002009" ixy="0.000108" iyz="-1.2e-05" ixz="8e-06"/>
   </inertial>
   <visual>
-    <origin xyz="-0.010849 -0.03552 -0.340467" rpy="0 0 0"/>
+    <origin xyz="-0.011349 -0.03431 -0.452482" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="-0.010849 -0.03552 -0.340467" rpy="0 0 0"/>
+    <origin xyz="-0.011349 -0.03431 -0.452482" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<link name="link6_v3_1">
+<link name="link6_v1_1">
   <inertial>
-    <origin xyz="-0.015134812773935424 0.07204733917419309 5.24783880485602e-05" rpy="0 0 0"/>
+    <origin xyz="-0.015134812773935663 0.07204701686400516 5.2948507222649877e-05" rpy="0 0 0"/>
     <mass value="0.792974216910335"/>
     <inertia ixx="0.000883" iyy="0.000353" izz="0.000975" ixy="0.000146" iyz="1e-06" ixz="-0.0"/>
   </inertial>
   <visual>
-    <origin xyz="-0.033149 -0.14552 -0.340467" rpy="0 0 0"/>
+    <origin xyz="-0.034149 -0.14431 -0.452482" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="-0.033149 -0.14552 -0.340467" rpy="0 0 0"/>
+    <origin xyz="-0.034149 -0.14431 -0.452482" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -216,62 +265,71 @@
   <visual>
     <origin xyz="-0.043149 -0.14552 -0.340467" rpy="0 0 0"/>
     <geometry>
-      <!-- 使用簡單的盒子作為視覺參考 -->
       <box size="0.01 0.01 0.01"/>
     </geometry>
     <material name="transparent">
-      <color rgba="0.0 0.0 0.0 0.0"/>  <!-- 完全透明 -->
+      <color rgba="0.0 0.0 0.0 0.0"/>  
     </material>
   </visual>
 </link>
 
+<joint name="Rigid77" type="fixed">
+  <origin xyz="-0.05 0.0 1.2708" rpy="0 0 -1.57"/>
+  <parent link="base_link"/>
+  <child link="Gasket_v3_1"/>
+</joint>
 
+<joint name="Rigid78" type="fixed">
+  <origin xyz="0.0 0.0 0.026" rpy="0 0 0"/>
+  <parent link="Gasket_v3_1"/>
+  <child link="dummy2_link0_v1_1"/>
+</joint>
 
 <joint name="dummy_joint1" type="revolute">
-  <origin xyz="0.0 0.0 0.0815" rpy="0 0 -1.57"/>
-  <parent link="base_link"/>
+  <origin xyz="0.0 0.05 0.097" rpy="0 0 0"/>
+  <parent link="dummy2_link0_v1_1"/>
   <child link="link1_v1_1"/>
-  <axis xyz="-0.0 0.0 1.0"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
   <limit upper="3.054326" lower="-2.96706" effort="100" velocity="100"/>
 </joint>
 
 <joint name="dummy_joint2" type="revolute">
   <origin xyz="-0.011639 0.034477 0.0285" rpy="0 0 0"/>
   <parent link="link1_v1_1"/>
-  <child link="link2_3_v4_1"/>
+  <child link="link2_3_v1_1"/>
   <axis xyz="1.0 0.0 0.0"/>
   <limit upper="1.308997" lower="-1.745329" effort="100" velocity="100"/>
 </joint>
 
 <joint name="dummy_joint3" type="revolute">
   <origin xyz="0.03565 0.0 0.168" rpy="0 0 0"/>
-  <parent link="link2_3_v4_1"/>
-  <child link="link4_v3_1"/>
-  <axis xyz="1.0 -0.0 0.0"/>
+  <parent link="link2_3_v1_1"/>
+  <child link="link4_v1_1"/>
+  <axis xyz="-1.0 -0.0 0.0"/>
   <limit upper="1.396263" lower="-1.570796" effort="100" velocity="100"/>
 </joint>
 
 <joint name="dummy_joint4" type="revolute">
   <origin xyz="-0.013162 0.001043 0.062467" rpy="0 0 0"/>
-  <parent link="link4_v3_1"/>
-  <child link="link5_v3_1"/>
-  <axis xyz="-0.0 1.0 0.0"/>
+  <parent link="link4_v1_1"/>
+  <child link="link5_v1_1"/>
+  <axis xyz="-0.0 -1.0 0.0"/>
   <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
 </joint>
 
 <joint name="dummy_joint5" type="revolute">
   <origin xyz="0.0223 0.11 0.0" rpy="0 0 0"/>
-  <parent link="link5_v3_1"/>
-  <child link="link6_v3_1"/>
-  <axis xyz="1.0 0.0 0.0"/>
+  <parent link="link5_v1_1"/>
+  <child link="link6_v1_1"/>
+  <axis xyz="-1.0 0.0 0.0"/>
   <limit upper="1.919862" lower="-1.745329" effort="100" velocity="100"/>
 </joint>
 
 <joint name="dummy_joint6" type="revolute">
   <origin xyz="-0.021 0.117 0.0" rpy="0 0 0"/>
-  <parent link="link6_v3_1"/>
+  <parent link="link6_v1_1"/>
   <child link="link7_v3_1"/>
-  <axis xyz="0.0 1.0 0.0"/>
+  <axis xyz="0.0 -1.0 0.0"/>
   <limit upper="1.919862" lower="-1.745329" effort="100" velocity="100"/>
 </joint>
 

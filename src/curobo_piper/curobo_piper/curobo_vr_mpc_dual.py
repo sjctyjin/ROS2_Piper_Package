@@ -36,7 +36,9 @@ class VRMPCControlNode(Node):
         
         
         self.declare_parameter("hand", "right")
+        self.declare_parameter("usb", False)
         self.hand = self.get_parameter("hand").get_parameter_value().string_value
+        self.usb = self.get_parameter("usb").get_parameter_value().string_value
 
 
         if self.hand == "left":
@@ -51,7 +53,7 @@ class VRMPCControlNode(Node):
         # ============ 配置參數 ============
         self.robot_config = 'piper.yml'
         self.vr_ip = '192.168.1.126'
-        self.use_usb = True
+        self.use_usb = self.usb 
         self.control_rate = 50.0
         self.gripper_sensitivity = 0.07
         self.gripper_open_value = -0.09
@@ -372,7 +374,7 @@ Window Geometry:
         try:
             t = TransformStamped()
             t.header.stamp = self.get_clock().now().to_msg()
-            t.header.frame_id = f'{self.arm}_base_link'
+            t.header.frame_id = f'base_link'
             t.child_frame_id = child_frame_id
             if self.hand == "left":
             # 位置
@@ -396,8 +398,16 @@ Window Geometry:
                 [ 0,              1, 0],
                 [-np.sin(theta),  0, np.cos(theta)]
             ])
+            
+            theta = np.deg2rad(-180)  # 將角度轉為弧度
+            Rz = np.array([
+                [np.cos(theta), -np.sin(theta), 0],
+                [np.sin(theta),  np.cos(theta), 0],
+                [0,              0,             1]
+            ])
             R = R @ Rx_90
             R = R @ Ry_45
+            R = R @ Rz
             #rots = Rot.from_matrix(R)
             
             # 轉成 euler
@@ -696,7 +706,7 @@ Window Geometry:
                     
                 self.get_logger().info("🏠 參考位置已設置")
                 #position = adjusted_transform[:3, 3]
-                position = [float(adjusted_transform[0, 3]),float(adjusted_transform[1, 3]),float(adjusted_transform[2, 3])+0.5]#adjusted_transform[:3, 3]
+                position = [float(adjusted_transform[0, 3]),float(adjusted_transform[1, 3]),float(adjusted_transform[2, 3])]#adjusted_transform[:3, 3]
                 
                 time.sleep(1)
                 # 簡化的歐拉角提取

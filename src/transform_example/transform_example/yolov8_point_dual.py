@@ -29,9 +29,14 @@ class CameraYoloProcessor(Node):
         self.model = YOLO('demo.pt')  # 替換為你的模型路徑
 
         # 根據 namespace 組合話題
-        self.image_topic = f'/{self.namespace}/{self.namespace}/color/image_rect_raw'
-        self.depth_topic = f'/{self.namespace}/{self.namespace}/depth/image_rect_raw'
-        self.camera_info_topic = f'/{self.namespace}/{self.namespace}/color/camera_info'
+        if self.namespace  == "cam3":
+            self.image_topic = f'/{self.namespace}/{self.namespace}/color/image_raw'
+            self.depth_topic = f'/{self.namespace}/{self.namespace}/aligned_depth_to_color/image_raw'
+            self.camera_info_topic = f'/{self.namespace}/{self.namespace}/color/camera_info'
+        else:
+            self.image_topic = f'/{self.namespace}/{self.namespace}/color/image_rect_raw'
+            self.depth_topic = f'/{self.namespace}/{self.namespace}/depth/image_rect_raw'
+            self.camera_info_topic = f'/{self.namespace}/{self.namespace}/color/camera_info'
         self.color_frame_id = f'{self.namespace}_color_optical_frame'  # 假設 frame_id 也用 namespace 做區隔
 
         # 创建发布者提供web前端使用
@@ -54,14 +59,26 @@ class CameraYoloProcessor(Node):
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+        self.hand = "None"
+        if self.namespace == "cam1":
+            self.hand = "right"
+        elif self.namespace == "cam2":
+            self.hand = "left"
+        elif self.namespace == "cam3":
+            self.hand = "dummy"
+        
 
         
         # 座標系名稱
 
         self.object_frame = f'{self.namespace}_object_frame'# 物體座標系 (來自 YOLO 輸出的 TF)
         self.camera_frame = f'{self.namespace}_color_optical_frame'# 相機座標系
-        self.link6_frame = f'{self.arm}_link6'      # link6 座標系
+        #self.link6_frame = f'{self.arm}_link6'      # link6 座標系
+        
         self.base_frame = f'{self.arm}_base_link'   # 基座座標系
+        if self.namespace == "cam3": 
+            self.base_frame = f'arm1_base_link' 
+        
         self.object_in_base = f'{self.namespace}_object_in_base'
 
         # 啟動定時器，每 0.5 秒執行一次
@@ -97,7 +114,7 @@ class CameraYoloProcessor(Node):
         
         def display():
             # 顯示影像（無檢測結果）
-            cv2.imshow("YOLO Detection", cv_image)
+            cv2.imshow(f"{self.hand }_YOLO Detection", cv_image)
             cv2.waitKey(1)
             #發布影像
             result_msg = self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8')
@@ -172,10 +189,11 @@ class CameraYoloProcessor(Node):
 
                 # 假設物體在相機坐標系下的姿態 (此處可替換為更精確的估計)
                 rotation_quaternion = [0, 0, 0, 1]  # 單位四元數
-                if depth > 0.4:
-                    self.get_logger().warning('超出距離')
-                    display()
-                    return
+                if self.namespace != "cam3":
+                    if depth > 0.4:
+                        self.get_logger().warning('超出距離')
+                        display()
+                        return
                 if cls == 0 :
                     # 廣播到 TF
                     self.broadcast_tf(xyz_camera, rotation_quaternion, self.object_frame)
@@ -188,7 +206,7 @@ class CameraYoloProcessor(Node):
         self.detected_image_pub.publish(result_msg)
 
 
-        cv2.imshow("YOLO Detection", cv_image)
+        cv2.imshow(f"{self.hand }_YOLO Detection", cv_image)
         cv2.waitKey(1)
     def broadcast_tf(self, translation, rotation, child_frame_id):
         """廣播物體的 TF"""
@@ -241,11 +259,18 @@ class CameraYoloProcessor(Node):
             quaternion = quaternion_from_matrix(T_base_to_object)
             
             # 補 Z 軸旋轉 90 度
-            q_orig = Rs.from_quat(quaternion) 
-            q_z90 = Rs.from_euler('z', -90, degrees=True)
-            q_new = q_orig * q_z90
-            quaternion_fixed = q_new.as_quat()
-            
+            if self.namespace != "cam3": 
+                q_orig = Rs.from_quat(quaternion) 
+                q_z90 = Rs.from_euler('z', -90, degrees=True)
+                q_new = q_orig * q_z90
+                quaternion_fixed = q_new.as_quat()
+            else:
+                q_orig = Rs.from_quat(quaternion) 
+                q_z90 = Rs.from_euler('z', 90, degrees=True)
+                q_y45 = Rs.from_euler('y', -90, degrees=True)
+                q_new = q_orig * q_z90
+                q_new = q_new * q_y45 
+                quaternion_fixed = q_new.as_quat()
 
             # 5. 廣播物體相對於基座的TF
             self.broadcast_object_tf(position, quaternion_fixed)

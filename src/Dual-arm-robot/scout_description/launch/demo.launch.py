@@ -15,7 +15,7 @@ def generate_launch_description():
     #default_model_path = os.path.join(pkg_scout_description, "urdf", "combined_robot_doublearm.xacro")#含車子
     #default_model_path = os.path.join(pkg_scout_description, "urdf", "piper_dual.xacro")#單兩手臂
 
-    default_model_path = os.path.join(pkg_scout_description, "urdf", "combined_robot_doublearm_nocar.xacro")#含機構手臂
+    default_model_path = os.path.join(pkg_scout_description, "urdf", "combined_robot_triplearm_nocar.xacro")#含機構手臂
     default_rviz_config_path = os.path.join(pkg_scout_description, "rviz", "model_display.rviz")
 
     # 3. 執行 xacro 產生 XML (robot_description_content)

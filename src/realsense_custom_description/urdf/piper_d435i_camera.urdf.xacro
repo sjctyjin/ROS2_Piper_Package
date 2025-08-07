@@ -1,12 +1,47 @@
 <?xml version="1.0" ?>
-<robot name="realsense2_camera" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!-- <robot name="realsense2_camera" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="use_nominal_extrinsics" default="false" />
-  <xacro:include filename="$(find realsense_custom_description)/urdf/_d405.urdf.xacro"/>
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
 
   <link name="d435_base_link" />
-  <xacro:sensor_d405 parent="d435_base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
-     <origin xyz="0 0 0" rpy="0 0 0"/>
-
-  </xacro:sensor_d405>
+  <xacro:sensor_d435i parent="d435_base_link" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:sensor_d435i>
 </robot>
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="realsense2_camera_macro">
 
+  <!--
+    Macro: d435i_camera
+    params:
+      prefix            : 前綴字串，避免 link/joint 名稱衝突 (e.g., cam1_, cam2_)
+      parent_link       : 要把相機掛在哪個機器人的 link 上
+      x y z roll pitch yaw : 相機基座（base_link）相對於 parent_link 的位姿
+      use_nominal_extrinsics (可選) : 是否使用 nominal 外部校正
+  -->
+
+  <xacro:macro name="d435_camera" params="prefix parent_link x y z roll pitch yaw use_nominal_extrinsics:='false'">
+
+    <!-- 1) 引入 RealSense 提供的 _d435i.urdf.xacro -->
+    <xacro:include filename="$(find realsense_custom_description)/urdf/_d435.urdf.xacro"/>
+
+    <!-- 2) 建立相機的 base_link（加 prefix 避免多台相機衝突）-->
+    <link name="${prefix}_d435_base_link"/>
+
+    <!-- 3) 用一個固定 joint 來把相機掛到 parent_link 上 -->
+    <joint name="${prefix}_d435_joint" type="fixed">
+      <origin xyz="${x} ${y} ${z}" rpy="${roll} ${pitch} ${yaw}"/>
+      <parent link="${parent_link}"/>
+      <child link="${prefix}_d435_base_link"/>
+    </joint>
+
+    <!-- 4) 呼叫 realsense2_description 中的 sensor_d435i 巨集
+             parent 直接改成這邊定義的相機 base_link
+             use_nominal_extrinsics 也可視需求帶參數 -->
+    <xacro:sensor_d435 parent="${prefix}_d435_base_link" name="${prefix}" use_nominal_extrinsics="${use_nominal_extrinsics}">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:sensor_d435>
+
+  </xacro:macro>
+
+</robot>

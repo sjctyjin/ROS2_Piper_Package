@@ -128,21 +128,21 @@ class ImprovedDualArmJointRelayNode(Node):
         complete_msg.effort.extend([0.0] * len(self.wheel_joint_names))
         
         # 添加左臂關節
-        arm1_positions = [0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]  # 左臂初始位置
+        arm1_positions = [0.2, 0.40, -0.8, 0.0, 0.5, 1.57, -0.04, 0.04]  # 左臂初始位置
         complete_msg.name.extend(self.arm1_joint_names)
         complete_msg.position.extend(arm1_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm1_joint_names))
         complete_msg.effort.extend([0.0] * len(self.arm1_joint_names))
         
         # 添加右臂關節
-        arm2_positions = [-0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]  # 右臂初始位置
+        arm2_positions = [-0.2, 0.40, -0.8, 0.0, 0.5, -1.57, -0.04, 0.04]  # 右臂初始位置
         complete_msg.name.extend(self.arm2_joint_names)
         complete_msg.position.extend(arm2_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm2_joint_names))
         complete_msg.effort.extend([0.0] * len(self.arm2_joint_names))
         
         # 🆕 添加第三隻手臂關節
-        arm3_positions = [0.0, 0.0, 0.0, 0.0, 0.0,0.0]  # 第三隻手臂初始位置 (5個關節)
+        arm3_positions = [0.0, -1.57, 0.0, 0.0, 0.0,0.0]  # 第三隻手臂初始位置 (5個關節)
         complete_msg.name.extend(self.arm3_joint_names)
         complete_msg.position.extend(arm3_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm3_joint_names))
@@ -302,10 +302,10 @@ class ImprovedDualArmJointRelayNode(Node):
         
         for i, name in enumerate(msg.name):
             # 處理關節名稱，支援 'Revolute 1' 或 'arm3_Revolute_1' 格式
-            if not name.startswith('arm3_'):
+            if not name.startswith('dummy_'):
                 # 將空格替換為底線並加上前綴
                 clean_name = name.replace(' ', '_')
-                prefixed_name = f'arm3_{clean_name}'
+                prefixed_name = f'dummy_{clean_name}'
             else:
                 prefixed_name = name
                 
@@ -389,7 +389,7 @@ class ImprovedDualArmJointRelayNode(Node):
                     arm2_msg.effort.append(msg.effort[i])
             # 🆕 第三隻手臂關節
             elif name.startswith('arm3_') or name.startswith('dummy_'):
-                if name.startswith('Revolute'):
+                if name.startswith('dummy'):
                     clean_name = name.replace(' ', '_')
                     arm_name = f'dummy_{clean_name}'
                 else:

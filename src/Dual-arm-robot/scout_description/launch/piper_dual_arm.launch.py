@@ -157,19 +157,24 @@ def generate_launch_description():
     )
 
     # ➤ 相機 3（車體 D435）
+    """
     cam3_node = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
         #namespace='cam3',
         name='cam3',
         parameters=[
-            {'serial_no': '_3456789CDEFA'},
+            #{'serial_no': '_3456789CDEFA'},
+            {'serial_no': '_036222070160'},
             {'align_depth.enable': True},
             {'pointcloud.enable': True},
             {'base_frame_id': 'cam3_d435_base_link'},
         ],
         output='screen'
     )
+    """
+    
+
     
     realsense_launch_dir = os.path.join(
         FindPackageShare('realsense2_camera').find('realsense2_camera'),
@@ -177,6 +182,25 @@ def generate_launch_description():
         'dual_camera'
     )
     
+    cam3_realsense_launch_dir = os.path.join(
+        get_package_share_directory('realsense2_camera'), 'launch')
+        
+    cam3_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            cam3_realsense_launch_dir, '/rs_launch.py'  # <--- 注意：這裡用的是 rs_launch.py
+        ]),
+        launch_arguments={
+            'serial_no': '_036222070160',
+            'camera_name': 'cam3',
+            'camera_namespace': 'cam3', 
+            'pointcloud.enable': 'true',
+            'align_depth.enable': 'true',
+            'enable_sync': 'true',
+            # 您可以為每支相機設定不同的解析度或幀率
+            # 'depth_module.profile': '640x480x30',
+            # 'rgb_camera.profile': '640x480x30',
+        }.items()
+    )
     dual_camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             realsense_launch_dir, '/rs_dual_camera_launch.py'
@@ -217,6 +241,17 @@ def generate_launch_description():
         output='screen'
     )
     
+    cam3_yolo = Node(
+        package='transform_example',
+        executable='yolov8_detect_dual',
+        name='cam2_yolo',
+        parameters=[
+            {'namespace': 'cam3'},
+            {'arm': 'arm3'}
+        ],
+        output='screen'
+    )
+    
 
     
     
@@ -247,6 +282,8 @@ def generate_launch_description():
         dual_camera_launch,
         #cam1_node,
         #cam2_node,
+        cam3_node,
         cam1_yolo,
         cam2_yolo,
+        cam3_yolo,
     ])
