@@ -97,6 +97,10 @@ ros2 run curobo_piper curobo_pick_and_place --ros-args -p place_position_x:=0.0 
 # 启用ROSBridge
 ros2 run curobo_piper curobo_pick_and_place --ros-args -p enable_rosbridge:=true -p rosbridge_host:='127.0.0.1'
 
+
+#跟隨節點 左右臂同時
+ros2 run curobo_piper curobo_dual_arm_mpc_tracker   --ros-args   -p left_arm_config:=trip_piper_left.yml   -p right_arm_config:=trip_piper_right.yml   -p cooperation_mode:=offset_distance   -p approach_distance:=0.10   -p approach_strategy:=left_right
+
 ```
 
 ### 5. 指令監聽手臂末端座標及姿態
