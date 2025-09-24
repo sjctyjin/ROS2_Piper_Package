@@ -161,11 +161,17 @@ ros2 run curobo_piper curobo_vr_mpc_dual --ros-args -p hand:=left
 右手控制器:
 A : 回歸原點
 B : 開始跟蹤
+搖桿:
+上下 : X軸旋轉上或下 
+左右 : Y軸旋轉
+腕按鍵: Z軸旋轉
 
 左手控制器:
 X : 回歸原點
 Y : 開始跟蹤
-
+上下 : X軸旋轉上或下 
+左右 : Y軸旋轉
+腕按鍵: Z軸旋轉
 ```
 ### 下執行指令
 
