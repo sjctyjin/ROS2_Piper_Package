@@ -135,10 +135,11 @@ ros2 run transform_example gripper_pose_joint
 
 ros2 launch piper start_single_piper_rviz.launch.py
 
-adb devices. The expected output:
+. The expected output:
 List of devices attached
     ce0551e7                device
 
+adb devices
 adb tcpip 5555
 adb shell ip route
 adb connect 192.168.1.126:5555
