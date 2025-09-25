@@ -58,21 +58,12 @@ class PickAndPlaceNode(Node):
         self.declare_parameter('place_position_z', 0.250)
         self.declare_parameter('gripper_close_value', 0.0)
         self.declare_parameter('gripper_open_value', -0.05)
-        self.declare_parameter('arm_prefix', 'arm1')  # 新增: 關節前綴參數
-        self.declare_parameter('cam_prefix', 'cam1')  # 新增: 相機前綴參數
+        # self.declare_parameter('arm_prefix', 'arm1')  # 新增: 關節前綴參數
+        # self.declare_parameter('cam_prefix', 'cam1')  # 新增: 相機前綴參數
         
         self.declare_parameter('is_left_arm', False)  # 預設為右手臂
         # 新增：取得左右手臂參數,左臂採摘 右臂輔助
-        self.is_left_arm = self.get_parameter('is_left_arm').get_parameter_value().bool_value
-        
-        if self.is_left_arm:
-            #self.declare_parameter('robot_config', 'dual_piper_left.yml') # 原始雙臂
-            self.declare_parameter('robot_config', 'trip_piper_left.yml') # 三手臂
-        else:
-            #self.declare_parameter('robot_config', 'dual_piper_right.yml')
-            self.declare_parameter('robot_config', 'trip_piper_right.yml')
-        # 读取参数
-        self.robot_config = self.get_parameter('robot_config').get_parameter_value().string_value
+                # 读取参数
         self.enable_rosbridge = self.get_parameter('enable_rosbridge').get_parameter_value().bool_value
         self.rosbridge_host = self.get_parameter('rosbridge_host').get_parameter_value().string_value
         self.rosbridge_port = self.get_parameter('rosbridge_port').get_parameter_value().integer_value
@@ -83,23 +74,37 @@ class PickAndPlaceNode(Node):
         self.place_position_z = self.get_parameter('place_position_z').get_parameter_value().double_value
         self.gripper_close_value = self.get_parameter('gripper_close_value').get_parameter_value().double_value
         self.gripper_open_value = self.get_parameter('gripper_open_value').get_parameter_value().double_value
-        self.arm_prefix = self.get_parameter('arm_prefix').get_parameter_value().string_value  # 取得前綴參數
-        self.cam_prefix = self.get_parameter('cam_prefix').get_parameter_value().string_value  # 取得前綴參數
+        # self.arm_prefix = self.get_parameter('arm_prefix').get_parameter_value().string_value  # 取得前綴參數
+        # self.cam_prefix = self.get_parameter('cam_prefix').get_parameter_value().string_value  # 取得前綴參數
         self.tf_locked_until_idle = False #TF座標鎖定機制
         
+        self.is_left_arm = self.get_parameter('is_left_arm').get_parameter_value().bool_value
         
+        if self.is_left_arm:
+            #self.declare_parameter('robot_config', 'dual_piper_left.yml') # 原始雙臂
+            self.declare_parameter('robot_config', 'trip_piper_left.yml') # 三手臂
+            self.arm_prefix = 'arm1'  # 左臂前綴
+            self.cam_prefix = 'cam1'  # 左臂相機前綴
+        else:
+            #self.declare_parameter('robot_config', 'dual_piper_right.yml')
+            self.declare_parameter('robot_config', 'trip_piper_right.yml')
+            self.arm_prefix = 'arm2'  # 右臂前綴
+            self.cam_prefix = 'cam2'  # 右臂相機前綴
+            
+        self.robot_config = self.get_parameter('robot_config').get_parameter_value().string_value
+
         
         # 根據左右手臂設定不同的四元數
-        if self.is_left_arm:
-            self.pick_quaternion = [0.881, 0.010, 0.472, 0.007]  # 左臂pick採摘四元數
-            #self.home_quaternion = [0.597, -0.453, 0.588, 0.303]   # 左臂Home位置四元數
-            self.home_quaternion = [ 0.796,0.060, 0.603, 0.011]
-            #self.home_quaternion = [0.074,0.320, -0.153, 0.932] #反手
-            self.get_logger().info("設定為左手臂，使用左臂四元數")
-        else:
-            self.pick_quaternion = [0.560, 0.000, 0.829, -0.000]  # 右臂pick協作四元數 (原始值)
-            self.home_quaternion =[ 0.652 ,0.221, 0.695, 0.207]      # 右臂Home位置四元數 (原始值)
-            self.get_logger().info("設定為右手臂，使用右臂四元數")
+        # if self.is_left_arm:
+        #     self.pick_quaternion = [0.881, 0.010, 0.472, 0.007]  # 左臂pick採摘四元數
+        #     #self.home_quaternion = [0.597, -0.453, 0.588, 0.303]   # 左臂Home位置四元數
+        #     self.home_quaternion = [ 0.796,0.060, 0.603, 0.011]
+        #     #self.home_quaternion = [0.074,0.320, -0.153, 0.932] #反手
+        #     self.get_logger().info("設定為左手臂，使用左臂四元數")
+        # else:
+        #     self.pick_quaternion = [0.560, 0.000, 0.829, -0.000]  # 右臂pick協作四元數 (原始值)
+        #     self.home_quaternion =[ 0.652 ,0.221, 0.695, 0.207]      # 右臂Home位置四元數 (原始值)
+        #     self.get_logger().info("設定為右手臂，使用右臂四元數")
             
         # 初始化ROSBridge
         if self.enable_rosbridge:
@@ -191,7 +196,7 @@ class PickAndPlaceNode(Node):
             use_lbfgs=False,
             use_es=False,
             store_rollouts=True,
-            step_dt=0.02,
+            step_dt=0.05,
             # override_particle_file="path/to/your/particle_mpc.yml"
             # 或者 base_cfg={"cost":{...}} 覆盖权重
         )
@@ -275,34 +280,49 @@ class PickAndPlaceNode(Node):
         if self.latest_joint_state_cb1 is None or self.latest_joint_state_cb2 is None:
             return
 
-        # 先取完arm1的1-6，再取arm2的1-6（連續順序）
-        arm1_positions = [self.latest_joint_state_cb1.position[
-                         self.latest_joint_state_cb1.name.index(f'arm1_joint{i}')
-                     ] for i in range(1, 7)]
-    
-        arm2_positions = [self.latest_joint_state_cb2.position[
-                         self.latest_joint_state_cb2.name.index(f'arm2_joint{i}')
-                     ] for i in range(1, 7)]
-
-        # 連續順序：先arm1_1-6，再arm2_1-6
-        if self.is_left_arm:
-            combined_names = [f'arm2_joint{i}' for i in range(1, 7)] + [f'arm1_joint{i}' for i in range(1, 7)]
-            combined_pos = arm2_positions + arm1_positions
-        else:
-            combined_names = [f'arm1_joint{i}' for i in range(1, 7)] + [f'arm2_joint{i}' for i in range(1, 7)]
-            combined_pos = arm1_positions + arm2_positions
+        expected_names = self.mpc.rollout_fn.joint_names
+        current_positions = []
         
+        # 根據左右手臂重新組合關節值
+        if self.is_left_arm:
+            # 左手臂控制邏輯
+            arm1_values = [0.2, 0.4, -0.8, 0.0, 0.5, 1.57]  # 左手臂值
+            arm2_values = [-0.2, 0.4, -0.8, 0.0, 0.5, -1.57]  # 右手臂值
+            
+            # 按照 MPC 期望順序組合
+            for joint_name in expected_names:
+                if 'arm1' in joint_name:
+                    idx = int(joint_name[-1]) - 1  # 取得關節編號
+                    current_positions.append(arm1_values[idx])
+                elif 'arm2' in joint_name:
+                    idx = int(joint_name[-1]) - 1
+                    current_positions.append(arm2_values[idx])
+        else:
+            # 右手臂控制邏輯
+            arm1_values = [0.2, 0.4, -0.8, 0.0, 0.5, 1.57]  # 左手臂值
+            arm2_values = [-0.2, 0.4, -0.8, 0.0, 0.5, -1.57]  # 右手臂值
+            
+            # 按照 MPC 期望順序組合
+            for joint_name in expected_names:
+                if 'arm2' in joint_name:
+                    idx = int(joint_name[-1]) - 1
+                    current_positions.append(arm2_values[idx])
+                elif 'arm1' in joint_name:
+                    idx = int(joint_name[-1]) - 1
+                    current_positions.append(arm1_values[idx])
 
-        # 3) 用 JointState 消息来存储合并结果
+        # Debug 輸出
+        # self.get_logger().info(f"MPC期望順序: {expected_names}")
+        # self.get_logger().info(f"組合後的關節值: {current_positions}")
+
+        # 更新 latest_joint_state
         js = JointState()
-        js.header.stamp = self.get_clock().now().to_msg()    # 或者用任意一个原始消息的 header
-        js.name     = combined_names
-        js.position = combined_pos
-        # 如果后续逻辑会读 velocity/effort，也可以填0
-        js.velocity = [0.0] * len(combined_pos)
-        js.effort   = [0.0] * len(combined_pos)
-
-        # 4) 最终赋值给 self.latest_joint_state
+        js.header.stamp = self.get_clock().now().to_msg()
+        js.name = expected_names
+        js.position = current_positions
+        js.velocity = [0.0] * len(current_positions)
+        js.effort = [0.0] * len(current_positions)
+        
         self.latest_joint_state = js
 
         #self.get_logger().info(f'Combined JointState: names={js.name}, pos={js.position}')
@@ -333,11 +353,11 @@ class PickAndPlaceNode(Node):
         send_to_msg = list(joint_positions)       
         send_to_msg[6] = gripper_value  # joint7是夹爪
         msg.position = send_to_msg
-        self.get_logger().info(f"positions_with_gripper 直－－－－－ ：{positions_with_gripper}")
+        # self.get_logger().info(f"positions_with_gripper 直－－－－－ ：{positions_with_gripper}")
         msg.velocity = [10.0] * len(self.joint_names)
         # 发布到ROS2
         self.publisher.publish(msg)
-        self.get_logger().info(f"最後位置 latest_joint_state－－－－－ ：{self.latest_joint_state.position}")
+        # self.get_logger().info(f"最後位置 latest_joint_state－－－－－ ：{self.latest_joint_state.position}")
         # 如果启用了ROSBridge，也发布到ROS1
         if self.enable_rosbridge:
             publish_joint_state(
@@ -366,33 +386,32 @@ class PickAndPlaceNode(Node):
                 current_joint_positions.append(0.0)
         self.current_joint_positions_globel = current_joint_positions
         """
-        self.get_logger().info(f"後 - 監聽 JointState : {self.latest_joint_state}")
-        current_joint_positions = []            
-        if self.is_left_arm: 
-            kine_joint = self.motion_gen.kinematics.joint_names[6:]+self.motion_gen.kinematics.joint_names[:6]
-        else:
-            kine_joint = self.motion_gen.kinematics.joint_names[:6]+self.motion_gen.kinematics.joint_names[6:]         
-        #kine_joint = self.motion_gen.kinematics.joint_names[6:]+self.motion_gen.kinematics.joint_names[:6]
-        for name in kine_joint:
-            #names = f"{self.arm_prefix}_{name}"
+        # self.get_logger().info(f"後 - 監聽 JointState : {self.latest_joint_state}")
+        current_joint_positions = []    
+
+        # 始終使用 MPC 期望的順序
+        expected_names = self.mpc.rollout_fn.joint_names
+        
+        # 按照 MPC 期望順序獲取關節值
+        for name in expected_names:
             if name in self.latest_joint_state.name:
-                    #self.get_logger().warning(f"关节 {name}，使用默认值0.0")
                 idx = self.latest_joint_state.name.index(name)
-                current_joint_positions.append(self.latest_joint_state.position[idx])                    
+                current_joint_positions.append(self.latest_joint_state.position[idx])
             else:
-                self.get_logger().warning(f"找不到关节 {name}，使用默认值0.0")
+                self.get_logger().warning(f"找不到關節 {name}，使用默認值0.0")
                 current_joint_positions.append(0.0)
+
         if current_joint_positions != []:
             self.current_joint_positions_globel = current_joint_positions
-        self.get_logger().info(f"後 - 監聽 current_joint_positions_globel : {self.current_joint_positions_globel}")
+        # self.get_logger().info(f"後 - 監聽 current_joint_positions_globel : {self.current_joint_positions_globel}")
         
         # 等待一个时间步
         time.sleep(self.dt)
     
     def execute_trajectory(self, trajectory, gripper_value=None,mpc_mode=None):
         """执行轨迹，可选指定夹爪值"""
-        self.get_logger().info(f"當前current_joint_global狀態 : {self.current_joint_positions_globel}")
-        self.get_logger().info(f"當前trajectory : {trajectory}")
+        # self.get_logger().info(f"當前current_joint_global狀態 : {self.current_joint_positions_globel}")
+        # self.get_logger().info(f"當前trajectory : {trajectory}")
         
         if len(trajectory) == 0:
             self.get_logger().warning("轨迹为空，无法执行")
@@ -459,6 +478,9 @@ class PickAndPlaceNode(Node):
         self.get_logger().info(f"  - solver batch_size: {getattr(self.mpc, 'batch_size', 'N/A')}")
         self.get_logger().info(f"  - 期望關節數: {len(self.mpc.rollout_fn.joint_names)}")
         """
+        self.get_logger().info(f"當前關節順序: {self.mpc.rollout_fn.joint_names}")
+        self.get_logger().info(f"當前關節值: {current_joints}")
+
         expected_names = self.mpc.rollout_fn.joint_names
         isaac_standard = [f'arm1_joint{i}' for i in range(1, 7)] + [f'arm2_joint{i}' for i in range(1, 7)]
 
@@ -467,6 +489,7 @@ class PickAndPlaceNode(Node):
         else:
             self.get_logger().warning(f"⚠️ 順序不一致! MPC期望: {expected_names}")
         self.get_logger().info(f"[MPC] 规划到目标位置: {target_pose}")
+
         # 1. 构造当前状态
         cu_js = CuroboJointState(
             position=self.tensor_args.to_device(np.array(current_joints)),
@@ -475,6 +498,7 @@ class PickAndPlaceNode(Node):
             jerk=self.tensor_args.to_device(np.zeros_like(current_joints)),
             joint_names=self.mpc.rollout_fn.joint_names
         )
+
         self.get_logger().info(f"更新前 ：{cu_js}")
         # 2. 创建 Goal
         goal = Goal(current_state=cu_js,goal_state=cu_js, goal_pose=target_pose)
@@ -504,7 +528,7 @@ class PickAndPlaceNode(Node):
                 check_traj = False
                 break
             js_next = res.js_action
-            self.get_logger().info(f"輸出參數 ： {js_next.position}")
+            # self.get_logger().info(f"輸出參數 ： {js_next.position}")
             traj.append(js_next.position.cpu().numpy().tolist())
             if traj !=[]:                
                 self.execute_trajectory(traj, gripper_value,"mpc")#指定mpc,避免一直輸出訊息
@@ -569,7 +593,7 @@ class PickAndPlaceNode(Node):
                 
                 try:
                     tf = self.tf_buffer.lookup_transform(
-                        f'base_link', f'cam3_object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
+                        f'base_link', f'{self.cam_prefix}_object_frame', rclpy.time.Time(), timeout=Duration(seconds=1.0))
                     # ✅ 插入這段檢查 TF 是否新鮮
                     now = self.get_clock().now()
                     tf_time = tf.header.stamp
@@ -609,19 +633,15 @@ class PickAndPlaceNode(Node):
                 
                 current_joint_positions = []
                 
-                self.get_logger().info(f"收关节状态前... : {self.current_joint_positions_globel}")
+                # 關鍵修改：統一使用 MPC 期望的順序
+                expected_names = self.mpc.rollout_fn.joint_names
+                self.get_logger().info(f"MPC期望順序: {expected_names}")
                 
-                if self.is_left_arm: 
-                    kine_joint = self.motion_gen.kinematics.joint_names[6:]+self.motion_gen.kinematics.joint_names[:6]
-                else:
-                    kine_joint = self.motion_gen.kinematics.joint_names[:6]+self.motion_gen.kinematics.joint_names[6:]         
-                               
-                for name in kine_joint:
-                    #names = f"{self.arm_prefix}_{name}"
+                # 直接使用 expected_names 的順序來獲取關節值
+                for name in expected_names:
                     if name in self.latest_joint_state.name:
-                        #self.get_logger().warning(f"关节 {name}，使用默认值0.0")
                         idx = self.latest_joint_state.name.index(name)
-                        current_joint_positions.append(self.latest_joint_state.position[idx])                    
+                        current_joint_positions.append(self.latest_joint_state.position[idx])
                     else:
                         self.get_logger().warning(f"找不到关节 {name}，使用默认值0.0")
                         current_joint_positions.append(0.0)
@@ -632,41 +652,54 @@ class PickAndPlaceNode(Node):
                 # 查找目标TF变换
                 self.get_logger().info(f'{self.arm_prefix}_base_link   {self.cam_prefix}_object_in_base')
                 
-                if self.is_left_arm == True:#左臂等待右臂完成抓定再移動
-                    target_pose = Pose.from_list([
-                        self.pick_position[0], self.pick_position[1], self.pick_position[2],
-                        self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
-                        #self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
-                    ])
-                    time.sleep(2) 
+                # if self.is_left_arm == True:#左臂等待右臂完成抓定再移動
+                #     target_pose = Pose.from_list([
+                #         self.pick_position[0], self.pick_position[1], self.pick_position[2],
+                #         self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
+                #         #self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
+                #     ])
+                #     # time.sleep(2) 
                     
-                else:#右臂直接移動
-                    target_pose = Pose.from_list([
-                        self.pick_position[0], self.pick_position[1], self.pick_position[2],
-                        self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
-                        #self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
-                    ])
+                # else:#右臂直接移動
+                #     target_pose = Pose.from_list([
+                #         self.pick_position[0], self.pick_position[1], self.pick_position[2],
+                #         #self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
+                #         self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
+                #     ])
+                target_pose = Pose.from_list([
+                    self.pick_position[0], self.pick_position[1], self.pick_position[2],
+                    self.pick_orientation[0], self.pick_orientation[1], self.pick_orientation[2], self.pick_orientation[3]
+                    #self.home_quaternion[0], self.home_quaternion[1], self.home_quaternion[2], self.home_quaternion[3]
+                ])
                 # 规划并移动到抓取位置，夹爪保持打开
-                if self.is_left_arm == False and self.arm2_gripper_pos == 0: #右臂狀態:確保左臂在工作原點
+                if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):
+                    self.current_state = self.STATE_GRASP
+                    self.get_logger().info("規劃到夾取位置成功--- 等待2秒")
+                    time.sleep(1.0)
+                else:
+                # 规划失败，回到IDLE状态
+                    self.current_state = self.STATE_IDLE
+                    self.get_logger().error(f"規劃失敗")
+                # if self.is_left_arm == False and self.arm2_gripper_pos == 0: #右臂狀態:確保左臂在工作原點
                 
-                    if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):
-                        self.current_state = self.STATE_GRASP
-                        self.get_logger().info("規劃到夾取位置成功--- 等待2秒")
-                        time.sleep(1.0)
-                    else:
-                    # 规划失败，回到IDLE状态
-                        self.current_state = self.STATE_IDLE
-                        self.get_logger().error(f"規劃失敗")
-                elif self.is_left_arm == True and self.arm1_gripper_pos == 1:# 左臂
-                    if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):                   
-                        #self.current_state = self.STATE_GRASP#原本是直接夾取
-                        self.current_state = self.STATE_REFINE_GRASP
-                        self.get_logger().info("規劃二次定位成功--- 等待2秒")
-                        #time.sleep(1.0)
-                    else:
-                    # 规划失败，回到IDLE状态
-                        self.current_state = self.STATE_IDLE
-                        self.get_logger().error(f"規劃失敗")
+                #     if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):
+                #         self.current_state = self.STATE_GRASP
+                #         self.get_logger().info("規劃到夾取位置成功--- 等待2秒")
+                #         time.sleep(1.0)
+                #     else:
+                #     # 规划失败，回到IDLE状态
+                #         self.current_state = self.STATE_IDLE
+                #         self.get_logger().error(f"規劃失敗")
+                # elif self.is_left_arm == True and self.arm1_gripper_pos == 1:# 左臂
+                #     if self.plan_and_execute_mpc(current_joint_positions, target_pose, self.gripper_open_value):                   
+                #         #self.current_state = self.STATE_GRASP#原本是直接夾取
+                #         self.current_state = self.STATE_REFINE_GRASP
+                #         self.get_logger().info("規劃二次定位成功--- 等待2秒")
+                #         #time.sleep(1.0)
+                #     else:
+                #     # 规划失败，回到IDLE状态
+                #         self.current_state = self.STATE_IDLE
+                #         self.get_logger().error(f"規劃失敗")
 
             elif self.current_state == self.STATE_REFINE_GRASP:#二次定位用
                 self.refine_check_time += 1
@@ -875,10 +908,10 @@ class PickAndPlaceNode(Node):
         
         if self.is_left_arm:
 
-            send_to_msg[:6] = [0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
+            send_to_msg[:6] = [0.2, 0.40, -0.8, 0.0, 0.5, 1.57, -0.04, 0.04]
         else:
 
-            send_to_msg[:6] = [-0.2, 0.4, -0.8, 0.0, 0.5, 0.0]
+            send_to_msg[:6] = [-0.2, 0.40, -0.8, 0.0, 0.5, -1.57, -0.04, 0.04]
         
         msg.position = send_to_msg
 

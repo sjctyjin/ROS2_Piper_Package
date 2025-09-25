@@ -221,7 +221,7 @@ def generate_launch_description():
     
     cam1_yolo = Node(
         package='transform_example',
-        executable='yolov8_detect_dual',
+        executable='yolov8_detect_dual_SAM',
         name='cam1_yolo',
         parameters=[
             {'namespace': 'cam1'},
@@ -232,7 +232,8 @@ def generate_launch_description():
     
     cam2_yolo = Node(
         package='transform_example',
-        executable='yolov8_detect_dual',
+        #executable='yolov8_detect_dual',
+        executable='yolov8_detect_dual_SAM',
         name='cam2_yolo',
         parameters=[
             {'namespace': 'cam2'},
@@ -274,7 +275,7 @@ def generate_launch_description():
         arm1_ctrl_node,
         arm2_ctrl_node,
         initial_joint_pub_node,
-        dual_camera_launch,
+        dual_camera_launch,#若要同時運行兩隻D405 需要執行這行
         #cam1_node,
         #cam2_node,
         cam3_node,

@@ -135,7 +135,7 @@ class ImprovedDualArmJointRelayNode(Node):
         complete_msg.effort.extend([0.0] * len(self.arm1_joint_names))
         
         # 添加右臂關節
-        arm2_positions = [-0.2, 0.40, -0.8, 0.0, 0.5, -1.57, -0.04, 0.04]  # 右臂初始位置
+        arm2_positions = [-0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]  # 右臂初始位置
         complete_msg.name.extend(self.arm2_joint_names)
         complete_msg.position.extend(arm2_positions)
         complete_msg.velocity.extend([0.0] * len(self.arm2_joint_names))

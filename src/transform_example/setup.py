@@ -32,6 +32,8 @@ setup(
              'yolov8_detect       = transform_example.yolov8_point:main',#讀取d435節點並輸出深度XYZ的TF座標
              'yolov8_detect_pose = transform_example.yolov8_point_pose:main',#yolo偵測 取得物體點雲姿態
              'yolov8_detect_dual       = transform_example.yolov8_point_dual:main',#讀取d435節點並輸出深度XYZ的TF座標_雙臂使用
+             'yolov8_detect_dual_SAM   = transform_example.yolov8_point_dual_mobileSAM:main',#讀取d435節點並輸出深度XYZ的TF座標_雙臂使用
+
              'moveit_frame        = transform_example.moveit_count_frame:main',#moveit 座標發布範例
              'object_pose_planner_service        = transform_example.object_pose_planner_service:main',#moveit 目標物座標發布-Call Service
              # 控制抓取 : ros2 service call /trigger_plan std_srvs/srv/Trigger {}

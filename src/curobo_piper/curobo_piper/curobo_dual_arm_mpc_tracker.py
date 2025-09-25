@@ -28,6 +28,7 @@ from curobo.rollout.rollout_base import Goal
 from curobo.util_file import get_world_configs_path, join_path, load_yaml
 from curobo.geom.types import WorldConfig
 from curobo.types.base import TensorDeviceType
+from curobo.geom.sdf.world import CollisionCheckerType
 
 # ROSBridge導入 (如果需要)
 try:
@@ -47,7 +48,7 @@ class DualArmIndependentMPCTracker(Node):
         self.declare_parameter('rosbridge_host', '192.168.3.125')
         self.declare_parameter('rosbridge_port', 9090)
         self.declare_parameter('frame_id', 'piper_single')
-        self.declare_parameter('target_tf_frame', 'cam3_object_in_base')
+        self.declare_parameter('target_tf_frame', 'cam3_object_frame')
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('tf_timeout', 0.5)
         self.declare_parameter('control_frequency', 20.0)
@@ -302,13 +303,13 @@ class DualArmIndependentMPCTracker(Node):
                 use_cuda_graph=False,
                 use_cuda_graph_metrics=False,
                 self_collision_check=True,
-                collision_checker_type=None,
+                collision_checker_type=CollisionCheckerType.MESH,
                 collision_cache={"obb": 10, "mesh": 5},
                 use_mppi=True,
                 use_lbfgs=False,
                 use_es=False,
                 store_rollouts=False,
-                step_dt=0.02,
+                step_dt=0.04,
             )
             self.left_mpc = MpcSolver(left_mpc_config)
             
@@ -320,13 +321,13 @@ class DualArmIndependentMPCTracker(Node):
                 use_cuda_graph=False,
                 use_cuda_graph_metrics=False,
                 self_collision_check=True,
-                collision_checker_type=None,
+                collision_checker_type=CollisionCheckerType.MESH,
                 collision_cache={"obb": 10, "mesh": 5},
                 use_mppi=True,
                 use_lbfgs=False,
                 use_es=False,
                 store_rollouts=False,
-                step_dt=0.02,
+                step_dt=0.04,
             )
             self.right_mpc = MpcSolver(right_mpc_config)
             
@@ -774,6 +775,7 @@ class DualArmIndependentMPCTracker(Node):
             return False
 
     def control_loop(self):
+        k = 0
         """主控制迴圈"""
         while self.control_thread_running and rclpy.ok():
             try:
@@ -782,7 +784,7 @@ class DualArmIndependentMPCTracker(Node):
                 
                 if tf_result is not None:
                     position, orientation = tf_result
-                    
+                    k = 0
                     # 檢查位置是否有顯著變化
                     if (self.target_position is None or 
                         np.linalg.norm(position - self.target_position) > self.position_threshold):
@@ -804,29 +806,41 @@ class DualArmIndependentMPCTracker(Node):
                         r_ori_arm2 = Rotation_R.from_quat([arm2_ori[0],arm2_ori[1], arm2_ori[2], arm2_ori[3]])
                         
                         # 建立 Z 軸旋轉 ±90 度
-                        r_z90 = Rotation_R.from_euler('z', 0, degrees=True)
-                        r_z_90 = Rotation_R.from_euler('z',-90, degrees=True)
+                        r_x90 = Rotation_R.from_euler('x', 90, degrees=True)
+                        r_x_90 = Rotation_R.from_euler('x',-90, degrees=True)
+                        
+                        r_z45 = Rotation_R.from_euler('y', 45, degrees=True)
+                        r_z_45 = Rotation_R.from_euler('y', 45, degrees=True)
+                        
+                        
 
                         # 合成新的方向（注意乘法順序）
-                        r_result_90 = r_z90 * r_ori
-                        r_result_n90 = r_z_90 * r_ori_arm2
-                        
+                        r_result_90 = r_x90 * r_ori
+                        r_result_n90 = r_x_90 * r_ori_arm2
+
+                        r_result_90 = r_z45 * r_result_90
+                        r_result_n90 = r_z_45 * r_result_n90
+
                         # 轉回四元數格式
                         quat_90 = r_result_90.as_quat()    # [x, y, z, w]
                         quat_n90 = r_result_n90.as_quat()
-                        
+
+                        arm1_pos[0] = arm1_pos[0] - 0.1  # ARM1在目標左方0.1m
+                        arm2_pos[0] = arm2_pos[0] - 0.1  # ARM2在目標右方0.1m
+                        arm1_pos[1] = arm1_pos[1] + 0.1  # ARM1在目標左方0.1m
+                        arm2_pos[1] = arm2_pos[1] - 0.1  # ARM2在目標右方0.1m
                         # 創建目標姿態
                         arm1_target_pose = Pose.from_list([
-                            arm1_pos[0], arm1_pos[1]+0.1, arm1_pos[2],
+                            arm1_pos[0], arm1_pos[1], arm1_pos[2],
                             #arm1_ori[0], arm1_ori[1], arm1_ori[2], arm1_ori[3]
                             quat_n90[0],quat_n90[1],quat_n90[2],quat_n90[3]
                         ])
                         
                         arm2_target_pose = Pose.from_list([
-                            arm2_pos[0], arm2_pos[1]-0.1, arm2_pos[2],
+                            arm2_pos[0], arm2_pos[1], arm2_pos[2],
                             #arm2_ori[0], arm2_ori[1], arm2_ori[2], arm2_ori[3]
-
-                            quat_90[0],quat_90[1],quat_90[2],quat_90[3]
+                            0.708,-0.070, 0.699, 0.071
+                            # quat_90[0],quat_90[1],quat_90[2],quat_90[3]
                         ])
                         
                         # 同步控制兩個手臂
@@ -863,17 +877,53 @@ class DualArmIndependentMPCTracker(Node):
                 else:
                     # TF丟失或過期，停止跟蹤
                     if self.tracking_enabled:
-                        self.get_logger().warning(f"TF跟蹤丟失: {error_msg}")
-                        self.tracking_enabled = False
-                        self.arm1_mpc_running = False
-                        self.arm2_mpc_running = False
-                
+                        k+=1
+                        if k>=20:
+                            k = 0
+                            self.get_logger().warning(f"TF跟蹤丟失: {error_msg}")
+                            self.tracking_enabled = False
+                            self.arm1_mpc_running = False
+                            self.arm2_mpc_running = False
+                            self.reset_to_tracking_mode()
+                            
+
                 # 控制頻率
                 time.sleep(1.0 / self.control_freq)
                 
             except Exception as e:
                 self.get_logger().error(f"控制迴圈出錯: {e}")
                 time.sleep(0.1)
+    def reset_to_tracking_mode(self):
+
+        """重置到跟隨模式"""
+        self.get_logger().info("🔄 重置到跟隨模式")
+        
+        try:
+            self.get_logger().info("TF遺失，雙臂移動回home點")
+            # 3. 發送回到初始位置的命令
+
+            initial_positions = {
+                'arm1': [0.2, 0.40, -0.8, 0.0, 0.5, 1.57, -0.04, 0.04],
+                'arm2': [-0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]
+            }
+            
+            # 多次發送確保執行
+            for _ in range(3):
+                self.publish_joint_commands(initial_positions['arm1'], 'arm1')
+                self.publish_joint_commands(initial_positions['arm2'], 'arm2')
+                time.sleep(0.5)
+            
+            # 4. 等待足夠時間讓手臂移動
+            time.sleep(2.0)
+            self.arm1_mpc_running = False
+            self.arm2_mpc_running = False
+            self.get_logger().info("✅ 系統已完全重置並準備好重新追蹤")
+            
+        except Exception as e:
+            self.get_logger().error(f"重置過程出錯: {e}")
+            # 確保基本狀態被重置
+            self.tracking_enabled = True
+            self.current_mode = OperationMode.TRACKING
 
     def _arm1_control_thread(self, target_pose):
         """ARM1控制線程"""

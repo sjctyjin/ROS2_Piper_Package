@@ -2,18 +2,18 @@
 <robot name="combined_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- 引入兩個機器人的Xacro文件 
-  <xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.xacro"/>
-  <xacro:include filename="$(find scout_description)/urdf/scout_v2.xacro"/>-->
+  <xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.xacro"/>-->
+  <xacro:include filename="$(find scout_description)/urdf/scout_v2.xacro"/>
   <!-- <xacro:include filename="$(find piper_description)/urdf/piper_description.xacro"/>-->
     <!-- 引入 piper_arm_macro.xacro-->
-    <xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/materials.xacro" />
-<xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.trans" />
-<xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.gazebo" />
-      <xacro:include filename="$(find realsense2_description)/urdf/_materials.urdf.xacro" />
-<xacro:include filename="$(find piper_description)/urdf/piper_description_d405_marco.xacro"/>
+  <xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/materials.xacro" />
+  <xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.trans" />
+  <xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.gazebo" />
+  <xacro:include filename="$(find realsense2_description)/urdf/_materials.urdf.xacro" />
+  <xacro:include filename="$(find piper_description)/urdf/piper_description_d405_marco.xacro"/>
   <!-- 引入相機的Xacro文件 -->
-<xacro:include filename="$(find realsense_custom_description)/urdf/piper_double_d405_camera.urdf.xacro"/>
-<xacro:include filename="$(find realsense_custom_description)/urdf/piper_d435i_camera.urdf.xacro"/>
+  <xacro:include filename="$(find realsense_custom_description)/urdf/piper_double_d405_camera.urdf.xacro"/>
+  <xacro:include filename="$(find realsense_custom_description)/urdf/piper_d435i_camera.urdf.xacro"/>
   <!-- 定義統一的父連接點 
   <link name="base_link">
     <inertial>
@@ -22,48 +22,43 @@
     </inertial>
   </link>
 -->
-<link name="base_link">
+<link name="combined_base">
   <inertial>
     <origin xyz="-0.0023454168511469727 -7.5124051764860745e-06 0.99353047899548718" rpy="0 0 0"/>
     <mass value="37.77937726543091"/>
     <inertia ixx="2.333472" iyy="2.671087" izz="0.432453" ixy="-7e-06" iyz="0.006346" ixz="0.021116"/>
   </inertial>
   <visual>
-    <origin xyz="0 0 1.2" rpy="0 0 -1.57"/>
+    <!-- <origin xyz="0 0 1.2" rpy="0 0 -1.57"/> -->
+    <origin xyz="-0.5 -0.25 0.11" rpy="0 0 0"/>
     <geometry>
       <!-- <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/> -->
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/body_asm.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin xyz="0 0 1.2" rpy="0 0 -1.57"/>
+    <origin xyz="-0.5 -0.25 0.1" rpy="0 0 -1.57"/>
     <geometry>
-      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/body_asm.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
+  <!-- <link name="combined_base">
+    <inertial>
+      <mass value="200"/>
+      <inertia ixx="20" iyy="20" izz="20" ixy="0" iyz="0" ixz="0"/>
+    </inertial>
+  </link> -->
 
 <!-- 在 link3_1_v1_1 左邊掛載第一支手臂 
 <origin xyz="0.21 -0.0075 0.052" rpy="0 0 0"/>-->
 
   <xacro:piper_arm
     prefix="arm1"
-    parent_link="base_link"
-    xyz="0.0075 0.205 1.23"
+    parent_link="combined_base"
+    xyz="0.26 0.205 1.17"
     rpy="3.14 0 0"/>
-    <!--
-  <xacro:piper_arm
-    prefix="arm1"
-    parent_link="base_link"
-    xyz="0.0 -0.200 0.05"
-    rpy="3.14 0 0"/>-->
-    <!--rpy="0 0 0"/>-->
- <!-- 第1台相機：掛在 arm1link6 
-       正手
-     x="-0.06092" y="0.00551" z="0.030946"
-    roll="-0.29119" pitch="0.016918" yaw="1.4759"
- -->
     
   <xacro:d405_camera
     prefix="cam1"
@@ -74,8 +69,8 @@
     
    <xacro:piper_arm
     prefix="arm2"
-    parent_link="base_link"
-   xyz="0.0075 -0.205 1.23"
+    parent_link="combined_base"
+   xyz="0.26 -0.205 1.17"
    rpy="3.14 0 0"/>
   <!-- 在 link3_1_v1_1 右邊掛載第二支手臂  
   
@@ -97,8 +92,8 @@
   <xacro:d405_camera
     prefix="cam2"
     parent_link="arm2_link6"
-    x="-0.113152" y="-0.02" z="0.040479"
-    roll="0.0" pitch="-0.35" yaw="3.14"
+    x="-0.113152" y="-0.0" z="0.050479"
+    roll="0.35" pitch="0.0" yaw="1.57"
     use_nominal_extrinsics="false"/>
     
   <xacro:d435_camera
@@ -274,8 +269,8 @@
 </link>
 
 <joint name="Rigid77" type="fixed">
-  <origin xyz="-0.05 0.0 1.2708" rpy="0 0 -1.57"/>
-  <parent link="base_link"/>
+  <origin xyz="0.205 0.0 1.21" rpy="0 0 -1.57"/>
+  <parent link="combined_base"/>
   <child link="Gasket_v3_1"/>
 </joint>
 
@@ -347,13 +342,15 @@
     <child link="zyx_R_1_base_link"/>
   </joint>-->
 
-  <!-- scout_v2 機器人連接 
+  <!-- scout_v2 機器人連接 -->
   <joint name="scout_v2_base_joint" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 0"/>
     <parent link="combined_base"/>
-    <child link="base_link"/>-->
+    <child link="base_link"/>
+  </joint>
     <!--child link="scout_v2_base_link"/
   </joint>-->
 
 </robot>
+
 

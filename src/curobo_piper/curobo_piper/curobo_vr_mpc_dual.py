@@ -25,6 +25,7 @@ from std_msgs.msg import Bool
 # VR Reader import
 from oculus_reader import OculusReader
 from tf2_ros import Buffer, TransformListener
+from scipy.spatial.transform import Rotation as Rotation_R
 
 
 class VRMPCControlNode(Node):
@@ -43,12 +44,15 @@ class VRMPCControlNode(Node):
 
         if self.hand == "left":
             self.pose_topic = "vr_left_hand"
+            self.arm = "arm1"
+            self.ee_link_orientation =  [ -0.453852, -0.441042, -0.548771, -0.546215]   # 左手臂的EE連結方向
 
-            self.arm = "arm2"
         else:
             self.pose_topic = "vr_right_hand"
 
-            self.arm = "arm1"
+            self.arm = "arm2"
+            self.ee_link_orientation =  [0.446086, -0.448896, 0.539154, -0.555709]  # 右手臂的EE連結方向  
+
             
         # ============ 配置參數 ============
         self.robot_config = 'piper.yml'
@@ -62,6 +66,9 @@ class VRMPCControlNode(Node):
         self.history_length = 8
         self.launch_rviz = launch_rviz
         self.past_pose = None
+        self.grasp_state = False
+        
+                            
         
         
         # ============ 初始化 ============
@@ -81,15 +88,12 @@ class VRMPCControlNode(Node):
         self.joint_publisher = self.create_publisher(JointState, f'/{self.arm}/joint_custom_state', 10)
         self.joint_state_sub = self.create_subscription(
             JointState, f'/{self.arm}/joint_states', self.joint_state_callback, 10)
-            
-            
-        
+                 
         #存放關節最後值
         self.current_joint_positions_globel = []    
         # 發布VR TF座標
         
-        self.VR_R_TF_publisher = self.create_publisher(TransformStamped, f'/{self.pose_topic}', 10)
-        
+        self.VR_R_TF_publisher = self.create_publisher(TransformStamped, f'/{self.pose_topic}', 10)       
         
         # 初始化CuRobo MPC
         self.init_mpc()
@@ -374,88 +378,100 @@ Window Geometry:
         try:
             t = TransformStamped()
             t.header.stamp = self.get_clock().now().to_msg()
-            t.header.frame_id = f'base_link'
+            t.header.frame_id = f'{self.arm}_base_link'
             t.child_frame_id = child_frame_id
             if self.hand == "left":
             # 位置
-                t.transform.translation.x = float(transform_matrix[0, 3])+0.121
+                t.transform.translation.x = float(transform_matrix[0, 3])+0.141
                 t.transform.translation.y = (float(transform_matrix[1, 3]))*-1
-                t.transform.translation.z = (float(transform_matrix[2, 3])-0.2)*-1
+                t.transform.translation.z = (float(transform_matrix[2, 3])-0.3)*-1
             else:
-                t.transform.translation.x = float(transform_matrix[0, 3])+0.121
+                t.transform.translation.x = float(transform_matrix[0, 3])+0.141
                 t.transform.translation.y = (float(transform_matrix[1, 3]+0.2))*-1
-                t.transform.translation.z = (float(transform_matrix[2, 3])-0.2)*-1
+                t.transform.translation.z = (float(transform_matrix[2, 3])-0.3)*-1
             # 旋轉矩陣轉由拉腳
             R = transform_matrix[:3, :3]
-            Rx_90 = np.array([
-                [1, 0, 0],
-                [0, 0, 1],
-                [0, -1, 0]
-            ])
-            theta = np.deg2rad(-60)  # 將角度轉為弧度
-            Ry_45 = np.array([
-                [ np.cos(theta),  0, np.sin(theta)],
-                [ 0,              1, 0],
-                [-np.sin(theta),  0, np.cos(theta)]
-            ])
             
-            theta = np.deg2rad(-180)  # 將角度轉為弧度
-            Rz = np.array([
-                [np.cos(theta), -np.sin(theta), 0],
-                [np.sin(theta),  np.cos(theta), 0],
-                [0,              0,             1]
-            ])
-            R = R @ Rx_90
-            R = R @ Ry_45
-            R = R @ Rz
+            # Rx_90 = np.array([
+            #     [1, 0, 0],
+            #     [0, 0, 1],
+            #     [0, -1, 0]
+            # ])
+            # theta = np.deg2rad(-60)  # 將角度轉為弧度
+            # Ry_45 = np.array([
+            #     [ np.cos(theta),  0, np.sin(theta)],
+            #     [ 0,              1, 0],
+            #     [-np.sin(theta),  0, np.cos(theta)]
+            # ])
+            
+            # theta = np.deg2rad(-180)  # 將角度轉為弧度
+            # Rz = np.array([
+            #     [np.cos(theta), -np.sin(theta), 0],
+            #     [np.sin(theta),  np.cos(theta), 0],
+            #     [0,              0,             1]
+            # ])
+            Rx_d = Rotation_R.from_euler('x', -90, degrees=True).as_matrix()
+            Ry_d = Rotation_R.from_euler('y', 90, degrees=True).as_matrix()
+            Rz_d = Rotation_R.from_euler('z', 180, degrees=True).as_matrix()
+
+            R = R @ Rz_d
+            R = R @ Ry_d
+            # R = R @ Rz
             #rots = Rot.from_matrix(R)
-            
+            Rm = np.asarray(R, dtype=float).reshape(3, 3)
             # 轉成 euler
             #euler = rot.as_euler('xyz', degrees=False)   # 'xyz' 順序可自訂
             
             #R[1] = -R[1]
             # 再轉回四元數
             #new_rot = R.from_euler('xyz', euler, degrees=False)
-            trace = np.trace(R)
+            # trace = np.trace(R)
             
-            if trace > 0:
-                s = np.sqrt(trace + 1.0) * 2
-                w = 0.25 * s
-                x = (R[2, 1] - R[1, 2]) / s
-                y = (R[0, 2] - R[2, 0]) / s
-                z = (R[1, 0] - R[0, 1]) / s
-            else:
-                if R[0, 0] > R[1, 1] and R[0, 0] > R[2, 2]:
-                    s = np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2]) * 2
-                    w = (R[2, 1] - R[1, 2]) / s
-                    x = 0.25 * s
-                    y = (R[0, 1] + R[1, 0]) / s
-                    z = (R[0, 2] + R[2, 0]) / s
-                elif R[1, 1] > R[2, 2]:
-                    s = np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2]) * 2
-                    w = (R[0, 2] - R[2, 0]) / s
-                    x = (R[0, 1] + R[1, 0]) / s
-                    y = 0.25 * s
-                    z = (R[1, 2] + R[2, 1]) / s
-                else:
-                    s = np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1]) * 2
-                    w = (R[1, 0] - R[0, 1]) / s
-                    x = (R[0, 2] + R[2, 0]) / s
-                    y = (R[1, 2] + R[2, 1]) / s
-                    z = 0.25 * s
+            # if trace > 0:
+            #     s = np.sqrt(trace + 1.0) * 2
+            #     w = 0.25 * s
+            #     x = (R[2, 1] - R[1, 2]) / s
+            #     y = (R[0, 2] - R[2, 0]) / s
+            #     z = (R[1, 0] - R[0, 1]) / s
+            # else:
+            #     if R[0, 0] > R[1, 1] and R[0, 0] > R[2, 2]:
+            #         s = np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2]) * 2
+            #         w = (R[2, 1] - R[1, 2]) / s
+            #         x = 0.25 * s
+            #         y = (R[0, 1] + R[1, 0]) / s
+            #         z = (R[0, 2] + R[2, 0]) / s
+            #     elif R[1, 1] > R[2, 2]:
+            #         s = np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2]) * 2
+            #         w = (R[0, 2] - R[2, 0]) / s
+            #         x = (R[0, 1] + R[1, 0]) / s
+            #         y = 0.25 * s
+            #         z = (R[1, 2] + R[2, 1]) / s
+            #     else:
+            #         s = np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1]) * 2
+            #         w = (R[1, 0] - R[0, 1]) / s
+            #         x = (R[0, 2] + R[2, 0]) / s
+            #         y = (R[1, 2] + R[2, 1]) / s
+            #         z = 0.25 * s
             
-            # 正規化四元數
-            norm = np.sqrt(w*w + x*x + y*y + z*z)
-            if norm > 1e-6:
-                w, x, y, z = w/norm, x/norm, y/norm, z/norm
-            else:
-                w, x, y, z = 1.0, 0.0, 0.0, 0.0
-            
-            t.transform.rotation.x = x
-            t.transform.rotation.y = y
-            t.transform.rotation.z = z
-            t.transform.rotation.w = w
-            
+            # # 正規化四元數
+            # norm = np.sqrt(w*w + x*x + y*y + z*z)
+            # if norm > 1e-6:
+            #     w, x, y, z = w/norm, x/norm, y/norm, z/norm
+            # else:
+            #     w, x, y, z = 1.0, 0.0, 0.0, 0.0
+            qx, qy, qz, qw = Rot.from_matrix(Rm).as_quat()
+
+            # 取得四元數並轉成旋轉矩陣或Euler
+            TF_qx = self.ee_link_orientation[0]
+            TF_qy = self.ee_link_orientation[1]
+            TF_qz = self.ee_link_orientation[2]
+            TF_qw = self.ee_link_orientation[3]
+
+            t.transform.rotation.x = float(TF_qx)
+            t.transform.rotation.y = float(TF_qy)
+            t.transform.rotation.z = float(TF_qz)
+            t.transform.rotation.w = float(TF_qw)
+
             self.tf_broadcaster.sendTransform(t)
             
         except Exception as e:
@@ -646,10 +662,18 @@ Window Geometry:
                 a_pressed = buttons.get('X', False)
                 b_pressed = buttons.get('Y', False)
                 trigger_value = buttons.get('leftTrig', [0.0])[0]
+                JSrx = buttons.get('leftJS')[0]
+                JSry = buttons.get('leftJS')[1]
+                JSrz = buttons.get('LG', False)
+                
             else:            
                 a_pressed = buttons.get('A', False)
                 b_pressed = buttons.get('B', False)
                 trigger_value = buttons.get('rightTrig', [0.0])[0]
+                JSrx = buttons.get('rightJS')[0]
+                JSry = buttons.get('rightJS')[1]
+                JSrz = buttons.get('RG', False)
+                
             
             
             #a_pressed = buttons.get('X', False)
@@ -663,7 +687,53 @@ Window Geometry:
             else:
                 self.current_gripper_value = -0.09
                 
-            #self.get_logger().info(f"夾爪直 ： {self.current_gripper_value}")
+            
+            if abs(JSrx) > 0.5:
+                delta_deg = 1  # 你要的每步旋轉角度（度），建議跟 dt/死區一起調
+                sign = 1 if JSrx > 0 else -1
+
+                R_cur   = Rotation_R.from_quat(self.ee_link_orientation)          # xyzw
+                R_delta = Rotation_R.from_euler('y', sign * delta_deg, degrees=True)
+
+                # ★ 在末端自身座標系繞 Y 軸轉：右乘
+                R_next  = R_cur * R_delta
+                self.ee_link_orientation = R_next.as_quat()
+
+                # 只拿來顯示用（可選）
+                roll, pitch, yaw = R_next.as_euler('xyz', degrees=True)
+                self.get_logger().info(f"夾爪直 ： {pitch:.2f}")
+
+            if abs(JSry) > 0.5:
+                delta_deg = 0.5  # 你要的每步旋轉角度（度），建議跟 dt/死區一起調
+                sign = 1 if JSry > 0 else -1
+
+                R_cur   = Rotation_R.from_quat(self.ee_link_orientation)          # xyzw
+                R_delta = Rotation_R.from_euler('x', sign * delta_deg, degrees=True)
+
+                # ★ 在末端自身座標系繞 Y 軸轉：右乘
+                R_next  = R_cur * R_delta
+                self.ee_link_orientation = R_next.as_quat()
+
+                # 只拿來顯示用（可選）
+                roll, pitch, yaw = R_next.as_euler('xyz', degrees=True)
+                self.get_logger().info(f"夾爪直 ： {pitch:.2f}")
+
+            if JSrz:
+                if self.grasp_state == False:
+                    R_cur   = Rotation_R.from_quat(self.ee_link_orientation)   
+                    R_delta = Rotation_R.from_euler('z', 90, degrees=True)
+                    # ★ 在末端自身座標系繞 Y 軸轉：右乘
+                    R_next  = R_cur * R_delta
+                    self.ee_link_orientation = R_next.as_quat()
+                    self.grasp_state = True
+            else:
+                if self.grasp_state == True:
+                    R_cur   = Rotation_R.from_quat(self.ee_link_orientation)   
+                    R_delta = Rotation_R.from_euler('z', -90, degrees=True)
+                    # ★ 在末端自身座標系繞 Y 軸轉：右乘
+                    R_next  = R_cur * R_delta
+                    self.ee_link_orientation = R_next.as_quat()
+                    self.grasp_state = False
             # A鍵：設置參考位置
             if a_pressed and not self.last_a_state:
                 for name in self.motion_gen.kinematics.joint_names:
@@ -692,9 +762,9 @@ Window Geometry:
                     #    msg.position = [0.2, 0.40, -0.8, 0.0, 0.5, 0.0, -0.04, 0.04]
                         
                     if self.hand == "right":
-                        msg.position = [-0.2, 1.1, -0.9, 0.8,-0.3, -0.8, -0.04, 0.04]
+                        msg.position = [-0.2, 0.40, -0.8, 0.0, 0.5, -1.57, -0.04, 0.04]
                     else:
-                        msg.position = [0.4, 1.1, -0.9, -0.8, -0.3, 0.0, -0.04, 0.04]
+                        msg.position = [0.2, 0.40, -0.8, 0.0, 0.5, 1.57, -0.04, 0.04]
                     msg.velocity = [10.0] * len(self.joint_names)
                     msg.velocity = [10.0] * len(self.joint_names)
             
@@ -797,7 +867,7 @@ Window Geometry:
                 #t.transform.translation.x = float(transform_matrix[0, 3])
                 #t.transform.translation.y = float(transform_matrix[1, 3])
                 #t.transform.translation.z = float(transform_matrix[2, 3])+0.5
-                position = [float(TF_x),float(TF_y),float(TF_z)+0.5]#adjusted_transform[:3, 3]
+                position = [float(TF_x),float(TF_y),float(TF_z)]#adjusted_transform[:3, 3]
                 
                 # 漂移檢測
                 is_drift, reason = self.detect_drift(position)
@@ -835,9 +905,11 @@ Window Geometry:
                         #)
                         
                         ik_goal = Pose(
-                            #position=self.tensor_args.to_device([float(TF_x),float(TF_y),float(TF_z)]),
-                            position=self.tensor_args.to_device([float(0.255),float(0.05),float(0.5203)]),
+                            position=self.tensor_args.to_device([float(TF_x),float(TF_y),float(TF_z)]),
+                            #position=self.tensor_args.to_device([float(0.255),float(0.05),float(0.5203)]),
                             quaternion=self.tensor_args.to_device([TF_qw, TF_qx, TF_qy,TF_qz]),
+                            #quaternion=self.tensor_args.to_device([0.544, 0.445, 0.450, 0.551]),#arm1
+                            # quaternion=self.tensor_args.to_device([-0.544, 0.445, -0.450, 0.551]),#arm2
                         )
                         #goal = Goal(current_state=cu_js, goal_state=cu_js, goal_pose=ik_goal)
                         self.goal_buffer.goal_pose.copy_(ik_goal)

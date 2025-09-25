@@ -18,6 +18,7 @@ import torch
 import time
 import threading
 import traceback
+from scipy.spatial.transform import Rotation as Rotation_R
 
 # CuRobo 導入
 from curobo.types.math import Pose
@@ -47,7 +48,7 @@ class DualArmMPCTracker(Node):
         self.declare_parameter('rosbridge_host', '192.168.3.125')
         self.declare_parameter('rosbridge_port', 9090)
         self.declare_parameter('frame_id', 'piper_single')
-        self.declare_parameter('target_tf_frame', 'cam3_object_in_base')
+        self.declare_parameter('target_tf_frame', 'cam3_object_frame')
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('tf_timeout', 0.5)  # TF過期時間(秒)
         self.declare_parameter('control_frequency', 20.0)  # 控制頻率(Hz)
@@ -459,11 +460,23 @@ class DualArmMPCTracker(Node):
                         self.target_position = position
                         self.target_orientation = orientation
                         self.tracking_enabled = True
-                        
+
+
+                        r_ori = Rotation_R.from_quat([orientation[0], orientation[1], orientation[2], orientation[3]])
+                        r_x90 = Rotation_R.from_euler('x', -90, degrees=True)
+                        r_result_90 = r_x90 * r_ori
+
+                        r_z90 = Rotation_R.from_euler('z', -45, degrees=True)
+                        r_result_90 = r_z90 * r_result_90
+
+                        # 轉回四元數格式
+                        quat_90 = r_result_90.as_quat()
                         # 創建目標姿態
                         target_pose = Pose.from_list([
-                            position[0], position[1], position[2],
-                            orientation[0], orientation[1], orientation[2], orientation[3]
+                            position[0]-0.05, position[1], position[2]-0.15,
+                            #orientation[0], orientation[1], orientation[2], orientation[3]
+                            #quat_90[0],quat_90[1],quat_90[2],quat_90[3]
+                            0.708,-0.070, 0.699, 0.071
                         ])
                         
                         # 使用MPC規劃並執行雙臂運動
