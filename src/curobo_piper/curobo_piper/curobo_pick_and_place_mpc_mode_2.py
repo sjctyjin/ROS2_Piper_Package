@@ -589,6 +589,7 @@ class EnhancedDualArmTracker(Node):
             
         except Exception as e:
             return None, str(e)
+
     def get_arm1_link6_tf(self):
         """獲取目標TF座標（原有函數，保持不變）"""
         try:
@@ -620,6 +621,7 @@ class EnhancedDualArmTracker(Node):
             
         except Exception as e:
             return None, str(e)
+            
     def create_cooperation_targets(self, base_position, base_orientation):
         """根據協作模式創建兩個手臂的目標（原有函數，保持不變）"""
         base_position = np.array(base_position)

@@ -38,9 +38,9 @@ class ImprovedDualArmJointRelayNode(Node):
            
         self.arm3_publisher = self.create_publisher(JointState, '/arm3/joint_states', 10)
         self.joint_states_publisher = self.create_publisher(JointState, '/joint_states', 10)
-        self.joint_states_publisher_cus = self.create_publisher(JointState, '/joint_custom_state', 10)
+        self.joint_states_publisher_cus = self.create_publisher(JointState, '/joint_custom_state', 10)#初始化使用
         
-        # 訂閱者: 分別訂閱每個手臂的自定義關節命令
+        # 訂閱者: 分別訂閱每個手臂的自定義關節命令 來自網頁端發送
         self.subscription_arm1_custom = self.create_subscription(
             JointState,
             '/arm1/joint_custom_state',

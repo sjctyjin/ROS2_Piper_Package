@@ -48,7 +48,7 @@ class DualArmIndependentMPCTracker(Node):
         self.declare_parameter('rosbridge_host', '192.168.3.125')
         self.declare_parameter('rosbridge_port', 9090)
         self.declare_parameter('frame_id', 'piper_single')
-        self.declare_parameter('target_tf_frame', 'cam3_object_frame')
+        self.declare_parameter('target_tf_frame', 'cam2_object_frame')
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('tf_timeout', 0.5)
         self.declare_parameter('control_frequency', 20.0)
@@ -831,13 +831,13 @@ class DualArmIndependentMPCTracker(Node):
                         arm2_pos[1] = arm2_pos[1] - 0.1  # ARM2在目標右方0.1m
                         # 創建目標姿態
                         arm1_target_pose = Pose.from_list([
-                            arm1_pos[0], arm1_pos[1], arm1_pos[2],
+                            arm1_pos[0]-0.2, arm1_pos[1], arm1_pos[2],
                             #arm1_ori[0], arm1_ori[1], arm1_ori[2], arm1_ori[3]
                             quat_n90[0],quat_n90[1],quat_n90[2],quat_n90[3]
                         ])
                         
                         arm2_target_pose = Pose.from_list([
-                            arm2_pos[0], arm2_pos[1], arm2_pos[2],
+                            arm2_pos[0]-0.2, arm2_pos[1]+0.05, arm2_pos[2]-0.1,
                             #arm2_ori[0], arm2_ori[1], arm2_ori[2], arm2_ori[3]
                             0.708,-0.070, 0.699, 0.071
                             # quat_90[0],quat_90[1],quat_90[2],quat_90[3]

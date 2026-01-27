@@ -84,7 +84,7 @@ class CameraYoloProcessor(Node):
         # 啟動定時器，每 0.5 秒執行一次
         # self.timer = self.create_timer(0.1, self.transform_object_to_base)
         # 创建定时器(給web使用)
-        self.tf_timer = self.create_timer(0.1, self.publish_transform)
+        # self.tf_timer = self.create_timer(0.1, self.publish_transform)
         self.get_logger().info('啟動定時器')
         
 
@@ -269,6 +269,7 @@ class CameraYoloProcessor(Node):
         # t.transform.rotation.w = float(rotation[3])
 
         self.tf_broadcaster.sendTransform(t)
+        self.publisher.publish(t)
         self.get_logger().info(f"Broadcasting TF for {child_frame_id}")
     def transform_object_to_base(self):
     
@@ -394,7 +395,7 @@ class CameraYoloProcessor(Node):
         try:
             # 查找TF
             transform = self.tf_buffer.lookup_transform(
-                self.base_frame, self.object_in_base, rclpy.time.Time())
+                self.base_frame, self.object_frame, rclpy.time.Time())
             now = self.get_clock().now()
             if now - self.last_detection_time > self.detection_timeout:
                 self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")

@@ -540,33 +540,12 @@ class EnhancedDualArmTracker(Node):
         cam3_frame = self.target_tf_frame  # 'cam3_object_frame'
 
         # 先嘗試cam1
-        cam1_result = self._get_single_camera_tf(cam1_frame, "CAM1")
+        cam1_result = self._get_single_camera_tf(cam1_frame, "CAM2")
         if cam1_result[0] is not None:
-            if self.cam1_initial_target_locked == False:
-
-                self.cam1_initial_target_locked = True
-
-                position, orientation = cam1_result[0]
-
-                self.cam1_locked_target_pose = cam1_result[0]
-
-                # CAM1 的姿態調整（根據你的實際需求調整）
-                self.current_camera_source = "CAM1"
-                self.cam1_lock_timestamp = 0
-                return (position, orientation), None
-            else:
-
-                position, orientation = self.cam1_locked_target_pose
-
-                self.current_camera_source = "CAM1"
-                self.cam1_lock_timestamp += 1
-
-                if self.cam1_lock_timestamp > self.cam1_target_lock_timeout :
-                    self.cam1_initial_target_locked = False
-                    self.cam1_lock_timestamp = 0
-
-                return (position, orientation), None
-
+            position, orientation = cam1_result[0]
+            # CAM3 的姿態調整（保持原有邏輯）
+            self.current_camera_source = "CAM2"
+            return (position, orientation), None
         # cam2 失敗，嘗試cam3
         cam3_result = self._get_single_camera_tf(cam3_frame, "CAM3")
         if cam3_result[0] is not None:
@@ -832,7 +811,7 @@ class EnhancedDualArmTracker(Node):
             if target_frame == 'cam3_object_frame':
                 pose = Pose.from_list([
                     # position[0], position[1], position[2],
-                    self.arm2_gripper_bag[0]-0.02, self.arm2_gripper_bag[1]+0.0, self.arm2_gripper_bag[2]-0.05,
+                    self.arm2_gripper_bag[0]-0.08, self.arm2_gripper_bag[1]+0.03, self.arm2_gripper_bag[2]-0.05,
                     # 0.572,-0.110, 0.811, 0.042
                     0.708, -0.07, 0.699, 0.071
                     #0.708,-0.070, 0.699, 0.071
@@ -1063,7 +1042,7 @@ class EnhancedDualArmTracker(Node):
             goal_buffer.goal_pose.copy_(target_pose)
             mpc_controller.update_goal(goal_buffer)
             
-            max_iters = min(self.mpc_max_iters, 20)
+            max_iters = min(self.mpc_max_iters, 30)
             success_count = 0
             current_joint_positions = joint_positions
             
@@ -1683,6 +1662,8 @@ class EnhancedDualArmTracker(Node):
                     self.publish_joint_commands_with_specific_joint('arm1', 5, 2.09, 0.0)
                     time.sleep(1.0)  # 等待夾爪回到安全位置
                     self.publish_joint_commands_with_specific_joint('arm1', 4, 1.09, 0.0)
+                    time.sleep(1.5)
+                    self.publish_joint_commands_with_specific_joint('arm1', 4, 0.7, 0.0)
                     time.sleep(1.5)
                     self.publish_joint_commands_with_specific_joint('arm1', 5, 2.09, -0.05)
                     time.sleep(1.0)  # 等待夾爪回到安全位置

@@ -78,16 +78,20 @@ class CameraYoloProcessor(Node):
         self.object_frame = f'{self.namespace}_object_frame'# 物體座標系 (來自 SAM 輸出的 TF)
         self.camera_frame = f'{self.namespace}_color_optical_frame'# 相機座標系
         
-        self.base_frame = f'{self.arm}_base_link'   # 基座座標系
+        #self.base_frame = f'{self.arm}_base_link'   # 基座座標系
         if self.namespace == "cam3": 
             self.base_frame = f'base_link' 
-        
+        elif self.namespace == "cam2":
+            self.base_frame = f'base_link' 
+        else:
+            self.base_frame = f'{self.arm}_base_link'  
+            
         self.object_in_base = f'{self.namespace}_object_in_base'
 
         # 啟動定時器，每 0.1 秒執行一次
         # self.timer = self.create_timer(0.1, self.transform_object_to_base)
         # 创建定时器(給web使用)
-        # self.tf_timer = self.create_timer(0.1, self.publish_transform)
+        #self.tf_timer = self.create_timer(0.1, self.publish_transform)
         self.get_logger().info('啟動定時器')
 
     def apply_clahe_and_gamma(self, img, use_clahe=True, gamma=1.0):
@@ -170,9 +174,11 @@ class CameraYoloProcessor(Node):
             
         # 將 ROS Image 轉換為 OpenCV 格式
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        
+        cv2.namedWindow(f"{self.hand}_SAM Detection",cv2.WINDOW_NORMAL)
+
         def display():
             # 顯示影像（無檢測結果）
+            #cv2.namedWindow(f"{self.hand}_SAM Detection",cv2.WINDOW_NORMAL)
             cv2.imshow(f"{self.hand}_SAM Detection", cv_image)
             cv2.waitKey(1)
             #發布影像
@@ -357,7 +363,9 @@ class CameraYoloProcessor(Node):
         # t.transform.rotation.w = float(rotation[3])
 
         self.tf_broadcaster.sendTransform(t)
+        
         self.get_logger().info(f"Broadcasting TF for {child_frame_id}")
+        self.publish_transform()
 
     def transform_object_to_base(self):
         now = self.get_clock().now()
@@ -475,8 +483,9 @@ class CameraYoloProcessor(Node):
     def publish_transform(self):
         try:
             # 查找TF
+            self.get_logger().info("⏸️ 找变换")
             transform = self.tf_buffer.lookup_transform(
-                self.base_frame, self.object_in_base, rclpy.time.Time())
+                self.base_frame, self.object_frame , rclpy.time.Time())
             now = self.get_clock().now()
             if now - self.last_detection_time > self.detection_timeout:
                 self.get_logger().info("⏸️ 偵測超時，跳過 object_in_base 的發布")

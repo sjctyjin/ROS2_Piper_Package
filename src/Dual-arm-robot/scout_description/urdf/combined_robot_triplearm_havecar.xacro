@@ -71,7 +71,7 @@
     prefix="arm2"
     parent_link="combined_base"
    xyz="0.26 -0.205 1.17"
-   rpy="3.14 0 0"/>
+   rpy="3.14 0 0" />
   <!-- 在 link3_1_v1_1 右邊掛載第二支手臂  
   
   <xacro:piper_arm
@@ -89,12 +89,22 @@
     roll="-0.29119" pitch="0.016918" yaw="1.4759"
     -->
     
-  <xacro:d405_camera
+    
+  <!-- <xacro:d405_camera
     prefix="cam2"
     parent_link="arm2_link6"
     x="-0.113152" y="-0.0" z="0.050479"
     roll="0.35" pitch="0.0" yaw="1.57"
+    use_nominal_extrinsics="false"/> -->
+
+
+  <xacro:d405_camera
+    prefix="cam2"
+    parent_link="Gasket_v3_1"
+    x="0.0" y="0.106" z="-0.35"
+    roll="-1.57" pitch="0.0" yaw="0.0"
     use_nominal_extrinsics="false"/>
+
     
   <xacro:d435_camera
     prefix="cam3"
@@ -103,7 +113,21 @@
     roll="0.0" pitch="-0.0" yaw="1.57"
     use_nominal_extrinsics="false"/>
 
+<joint name="cam3_color_optical_joint" type="fixed">
+  <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  <parent link="cam3_link"/>
+  <child link="cam3_color_optical_frame"/>
+</joint>
 
+<link name="cam3_color_optical_frame"/>
+
+<joint name="cam3_depth_optical_joint" type="fixed">
+  <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  <parent link="cam3_link"/>
+  <child link="cam3_depth_optical_frame"/>
+</joint>
+
+<link name="cam3_depth_optical_frame"/>
 <link name="Gasket_v3_1">
   <inertial>
     <origin xyz="-2.603155605204514e-13 0.04987462633751475 0.022990960314565406" rpy="0 0 0"/>
@@ -124,7 +148,7 @@
     </geometry>
   </collision>
 </link>
-
+    
 <link name="dummy2_link0_v1_1">
   <inertial>
     <origin xyz="-2.0924404917193838e-07 0.05022651776226978 0.0543576583868397" rpy="0 0 0"/>

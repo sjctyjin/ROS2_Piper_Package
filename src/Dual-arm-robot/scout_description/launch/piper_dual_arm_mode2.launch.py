@@ -127,6 +127,7 @@ def generate_launch_description():
         name='joint_gui_pub_dual',
         output='screen'
     )
+    
     # ➤ 相機 1（手臂左側 D405）
     cam1_node = Node(
         package='realsense2_camera',
@@ -201,6 +202,7 @@ def generate_launch_description():
             # 'rgb_camera.profile': '640x480x30',
         }.items()
     )
+
     dual_camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             realsense_launch_dir, '/rs_dual_camera_launch.py'
@@ -214,6 +216,7 @@ def generate_launch_description():
             'camera_namespace2': 'cam2',
             'pointcloud.enable': 'true',
             'align_depth.enable': 'true',
+            'publish_tf':'false',
         }.items()
     )
     

@@ -41,6 +41,7 @@ def generate_launch_description():
         output="screen",
         parameters=[robot_description],
     )
+    
     pub_state_publisher_node = launch_ros.actions.Node(
         package="transform_example",
         executable="joint_gui_pub_dual",

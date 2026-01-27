@@ -533,7 +533,7 @@ Window Geometry:
         
         # 工作空間偏移
         #offset_matrix = create_matrix(0.121, 0.000, 0.458, 0, 0, 0)
-        offset_matrix = create_matrix(0.0, 0.000, 0.0, 0, 0, 0)
+        offset_matrix = create_matrix(0.0, 0.0, 0.0, 0, 0, 0)
         # 當前矩陣
         current_matrix = create_matrix(*current_pose[:6])
         
