@@ -1,0 +1,83 @@
+
+<?xml version="1.0"?>
+<robot name="amr_forklift">
+  <!-- Base of the robot -->
+  <link name="base">
+    <visual>
+      <geometry>
+        <mesh filename="base_with_fork.STL"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="base_with_fork.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Front wheel assembly as the base_link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="front_wheel_asm_L.STL"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="front_wheel_asm_L.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Driver wheel -->
+  <link name="driver_wheel">
+    <visual>
+      <geometry>
+        <mesh filename="driver_wheel.STL"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="driver_wheel.STL"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="5"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+
+  <joint name="driver_wheel_joint" type="continuous">
+    <parent link="base"/>
+    <child link="driver_wheel"/>
+    <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- Steer wheel -->
+  <link name="steer_wheel">
+    <visual>
+      <geometry>
+        <mesh filename="steer_wheel.STL"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="steer_wheel.STL"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.005" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005"/>
+    </inertial>
+  </link>
+
+  <joint name="steer_wheel_joint" type="continuous">
+    <parent link="driver_wheel"/>
+    <child link="steer_wheel"/>
+    <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+</robot>

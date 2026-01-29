@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>scout_description</name>
+  <version>0.4.2</version>
+  <description>AgileX Scout URDF description for ROS2</description>
+
+  <maintainer email="support@agilex.ai">AgileX Robotics</maintainer>
+  <license>BSD</license>
+
+  <!-- Build system dependencies -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Dependencies -->
+  <depend>urdf</depend>
+  <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>joint_state_publisher_gui</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>rviz2</depend>
+  <depend>lms1xx</depend>
+
+  <!-- Export section for ament -->
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

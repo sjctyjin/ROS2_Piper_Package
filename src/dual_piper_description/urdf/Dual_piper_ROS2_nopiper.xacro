@@ -1,0 +1,89 @@
+<?xml version="1.0" ?>
+<robot name="Dual_piper_ROS2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.trans" />
+<xacro:include filename="$(find Dual_piper_ROS2_description)/urdf/Dual_piper_ROS2.gazebo" />
+<link name="base_link">
+  <inertial>
+    <origin xyz="-0.0023454168511469727 -7.5124051764860745e-06 -0.20653047899548718" rpy="0 0 0"/>
+    <mass value="37.77937726543091"/>
+    <inertia ixx="2.333472" iyy="2.671087" izz="0.432453" ixy="-7e-06" iyz="0.006346" ixz="0.021116"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_L_1">
+  <inertial>
+    <origin xyz="-0.002061159399947915 0.001999236767458208 -0.02167320414124358" rpy="0 0 0"/>
+    <mass value="0.32270533439735705"/>
+    <inertia ixx="0.000209" iyy="0.000323" izz="0.000317" ixy="-0.0" iyz="-5e-06" ixz="-2.1e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.21 -0.0075 0.052" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/link1_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.21 -0.0075 0.052" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/link1_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_R_1">
+  <inertial>
+    <origin xyz="-0.0020613342325954964 0.001999236766165728 -0.02167320414124633" rpy="0 0 0"/>
+    <mass value="0.32270533439735666"/>
+    <inertia ixx="0.000209" iyy="0.000323" izz="0.000317" ixy="-0.0" iyz="-5e-06" ixz="-2.1e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.188149 -0.0075 0.052" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/link1_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.188149 -0.0075 0.052" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Dual_piper_ROS2_description)/meshes/link1_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+  
+<joint name="Revolute 1" type="revolute">
+  <origin xyz="-0.21 0.0075 0.03" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link1_L_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+  <limit upper="2.617994" lower="-2.617994" effort="100" velocity="100"/>
+</joint>
+
+
+<joint name="Revolute 10" type="revolute">
+  <origin xyz="0.188149 0.0075 0.03" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link1_R_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+  <limit upper="2.617994" lower="-2.617994" effort="100" velocity="100"/>
+</joint>
+
+
+</robot>

@@ -1,0 +1,691 @@
+<?xml version="1.0" ?>
+<robot name="dummy_piper_ROS2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find dummy_piper_ROS2_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find dummy_piper_ROS2_description)/urdf/dummy_piper_ROS2.trans" />
+<xacro:include filename="$(find dummy_piper_ROS2_description)/urdf/dummy_piper_ROS2.gazebo" />
+<link name="base_link">
+  <inertial>
+    <origin xyz="-0.0021448415150217047 -0.0022736411355339207 -0.2820220103771814" rpy="0 0 0"/>
+    <mass value="41.3124829379966"/>
+    <inertia ixx="2.737399" iyy="3.075434" izz="0.439574" ixy="-2.8e-05" iyz="0.003215" ixz="0.018457"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_v1_1">
+  <inertial>
+    <origin xyz="-0.005698056046029529 0.00648616381647002 0.012857188251092194" rpy="0 0 0"/>
+    <mass value="0.4200298104778203"/>
+    <inertia ixx="0.000188" iyy="0.000156" izz="0.000263" ixy="6.2e-05" iyz="-4.3e-05" ixz="2.7e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.0 0.0 -0.0815" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.0 0.0 -0.0815" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link2_3_v4_1">
+  <inertial>
+    <origin xyz="0.01884442516054531 0.0019841485543513476 0.08366314329154632" rpy="0 0 0"/>
+    <mass value="1.8966297326812738"/>
+    <inertia ixx="0.00634" iyy="0.006744" izz="0.001194" ixy="-4e-06" iyz="6.4e-05" ixz="0.000771"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.011639 -0.034477 -0.11" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v4_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.011639 -0.034477 -0.11" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_3_v4_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link4_v3_1">
+  <inertial>
+    <origin xyz="-0.010734927861478581 -0.02899910919329477 0.049078739095576474" rpy="0 0 0"/>
+    <mass value="0.9123222504571403"/>
+    <inertia ixx="0.00082" iyy="0.000695" izz="0.00053" ixy="-4.2e-05" iyz="0.000139" ixz="8.7e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.024011 -0.034477 -0.278" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.024011 -0.034477 -0.278" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link5_v3_1">
+  <inertial>
+    <origin xyz="-0.0050623285902477895 0.05998132886165671 0.0006226400248250941" rpy="0 0 0"/>
+    <mass value="1.0415582650622635"/>
+    <inertia ixx="0.001817" iyy="0.000592" izz="0.002009" ixy="0.000108" iyz="-1.2e-05" ixz="8e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.010849 -0.03552 -0.340467" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.010849 -0.03552 -0.340467" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link6_v3_1">
+  <inertial>
+    <origin xyz="-0.015134812773935424 0.07204733917419309 5.24783880485602e-05" rpy="0 0 0"/>
+    <mass value="0.792974216910335"/>
+    <inertia ixx="0.000883" iyy="0.000353" izz="0.000975" ixy="0.000146" iyz="1e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.033149 -0.14552 -0.340467" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.033149 -0.14552 -0.340467" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_v3_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_L_1">
+  <inertial>
+    <origin xyz="-0.002061159401200302 0.0019992367661669794 -0.021673204141243713" rpy="0 0 0"/>
+    <mass value="0.32270533439735705"/>
+    <inertia ixx="0.000209" iyy="0.000323" izz="0.000317" ixy="-0.0" iyz="-5e-06" ixz="-2.1e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.21 -0.005 0.1575" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.21 -0.005 0.1575" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link2_L_1">
+  <inertial>
+    <origin xyz="-0.00030091655693983976 -0.013078055754387863 -0.10788736669841148" rpy="0 0 0"/>
+    <mass value="1.5427658778919533"/>
+    <inertia ixx="0.019202" iyy="0.019712" izz="0.002027" ixy="7e-06" iyz="-0.001589" ixz="4.7e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.21 -0.005 0.2005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.21 -0.005 0.2005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link3_L_1">
+  <inertial>
+    <origin xyz="0.0025865009970291175 0.05733839845223251 -0.013001466886282731" rpy="0 0 0"/>
+    <mass value="0.9380852730635408"/>
+    <inertia ixx="0.004469" iyy="0.000691" izz="0.004421" ixy="-9e-05" iyz="0.000603" ixz="2.4e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.21 -0.002786 0.485539" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link3_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.21 -0.002786 0.485539" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link3_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link4_L_1">
+  <inertial>
+    <origin xyz="0.0004901963203811921 0.04873967705333643 -0.00019745448533647902" rpy="0 0 0"/>
+    <mass value="1.8057383614208613"/>
+    <inertia ixx="0.001933" iyy="0.000759" izz="0.001938" ixy="-9e-06" iyz="2e-06" ixz="-2e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.206388 -0.172453 0.509698" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.206388 -0.172453 0.509698" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link5_L_1">
+  <inertial>
+    <origin xyz="0.019355062911705384 0.05789043113514636 1.9047120620174773e-05" rpy="0 0 0"/>
+    <mass value="1.0665335093940314"/>
+    <inertia ixx="0.000896" iyy="0.000508" izz="0.000945" ixy="-0.000186" iyz="5e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.230001 -0.247612 0.509916" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.230001 -0.247612 0.509916" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link6_L_1">
+  <inertial>
+    <origin xyz="-0.0004856100826126919 0.028463941658421976 -8.310620970086724e-05" rpy="0 0 0"/>
+    <mass value="0.9304434467350641"/>
+    <inertia ixx="0.000399" iyy="0.000389" izz="0.000401" ixy="-1e-06" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.207431 -0.338955 0.510181" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.207431 -0.338955 0.510181" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_hand_L_1">
+  <inertial>
+    <origin xyz="-2.5285972645450183e-05 0.0017133342639561455 0.0014867027777385466" rpy="0 0 0"/>
+    <mass value="0.23115389484233667"/>
+    <inertia ixx="4.9e-05" iyy="0.000509" izz="0.000467" ixy="-7e-06" iyz="1e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.208229 -0.392948 0.510338" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_hand_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0.208229 -0.392948 0.510338" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_hand_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link1_R_1">
+  <inertial>
+    <origin xyz="-0.0020613342325954687 0.001999236766165845 -0.021673204141246516" rpy="0 0 0"/>
+    <mass value="0.32270533439735666"/>
+    <inertia ixx="0.000209" iyy="0.000323" izz="0.000317" ixy="-0.0" iyz="-5e-06" ixz="-2.1e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.188149 -0.005 0.1575" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.188149 -0.005 0.1575" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link1_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link2_R_1">
+  <inertial>
+    <origin xyz="-0.0003010914010460608 -0.013078055754090146 -0.1078873666984067" rpy="0 0 0"/>
+    <mass value="1.5427658778918854"/>
+    <inertia ixx="0.019202" iyy="0.019712" izz="0.002027" ixy="7e-06" iyz="-0.001589" ixz="4.7e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.188149 -0.005 0.2005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.188149 -0.005 0.2005" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link2_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link3_R_1">
+  <inertial>
+    <origin xyz="0.0025863262192123704 0.057338398449742596 -0.013001466886287782" rpy="0 0 0"/>
+    <mass value="0.9380852730636945"/>
+    <inertia ixx="0.004469" iyy="0.000691" izz="0.004421" ixy="-9e-05" iyz="0.000603" ixz="2.4e-05"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.188149 -0.002786 0.485539" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link3_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.188149 -0.002786 0.485539" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link3_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link4_R_1">
+  <inertial>
+    <origin xyz="0.0004900216991113315 0.04873967704935592 -0.00019745448533659005" rpy="0 0 0"/>
+    <mass value="1.8057383614208402"/>
+    <inertia ixx="0.001933" iyy="0.000759" izz="0.001938" ixy="-9e-06" iyz="2e-06" ixz="-2e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.191761 -0.172453 0.509698" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.191761 -0.172453 0.509698" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link4_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link5_R_1">
+  <inertial>
+    <origin xyz="0.019354888372379364 0.05789043113578085 1.904712062095193e-05" rpy="0 0 0"/>
+    <mass value="1.066533509394038"/>
+    <inertia ixx="0.000896" iyy="0.000508" izz="0.000945" ixy="-0.000186" iyz="5e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.168148 -0.247612 0.509916" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.168148 -0.247612 0.509916" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link5_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link6_R_1">
+  <inertial>
+    <origin xyz="-0.00048578468428400745 0.02846394001108543 -8.31063507740204e-05" rpy="0 0 0"/>
+    <mass value="0.9304434467350642"/>
+    <inertia ixx="0.000399" iyy="0.000389" izz="0.000401" ixy="-1e-06" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.190718 -0.338955 0.510181" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.190718 -0.338955 0.510181" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/link6_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_hand_R_1">
+  <inertial>
+    <origin xyz="-2.546042721024433e-05 0.0017133342622374648 0.0014867027777391018" rpy="0 0 0"/>
+    <mass value="0.2311538948423364"/>
+    <inertia ixx="4.9e-05" iyy="0.000509" izz="0.000467" ixy="-7e-06" iyz="1e-06" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.18992 -0.392948 0.510338" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_hand_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.18992 -0.392948 0.510338" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_hand_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_left_R_1">
+  <inertial>
+    <origin xyz="-0.17256083323471189 -0.36827865543446936 0.5107103618547612" rpy="0 0 0"/>
+    <mass value="0.1849916577715459"/>
+    <inertia ixx="0.000103" iyy="4.3e-05" izz="7.3e-05" ixy="1.3e-05" iyz="-3e-06" ixz="1e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="${-0.373821+0.183901} ${-0.791173+0.398225} ${1.021861-0.511523}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_left_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="${-0.373821+0.183901} ${-0.791173+0.398225} ${1.021861-0.511523}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_left_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_right_R_1">
+  <inertial>
+    <origin xyz="-0.19612144839619366 -0.36862256958140444 0.5121624149129507" rpy="0 0 0"/>
+    <mass value="0.18499165777154566"/>
+    <inertia ixx="0.000104" iyy="4.3e-05" izz="7.3e-05" ixy="-1.1e-05" iyz="3e-06" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="${-0.373821+0.183901} ${-0.791173+0.398225} ${1.021861-0.511523}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_right_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="${-0.373821+0.183901} ${-0.791173+0.398225} ${1.021861-0.511523}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_right_R_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_right_L_1">
+  <inertial>
+    <origin xyz="0.20198372603221834 -0.36274056959112166 0.5121454149129492" rpy="0 0 0"/>
+    <mass value="0.18499165777154566"/>
+    <inertia ixx="0.000104" iyy="4.3e-05" izz="7.3e-05" ixy="-1.1e-05" iyz="3e-06" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="${0.42243-0.214204} ${-0.785291+0.392343} ${1.021844-0.511506}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_right_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="${0.42243-0.214204} ${-0.785291+0.392343} ${1.021844-0.511506}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_right_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="piper_left_L_1">
+  <inertial>
+    <origin xyz="0.22554434119338285 -0.36239665542209215 0.5106933618547599" rpy="0 0 0"/>
+    <mass value="0.1849916577715459"/>
+    <inertia ixx="0.000103" iyy="4.3e-05" izz="7.3e-05" ixy="1.3e-05" iyz="-3e-06" ixz="1e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="${0.42243-0.214204} ${-0.785291+0.392343} ${1.021844-0.511506}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_left_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="${0.42243-0.214204} ${-0.785291+0.392343} ${1.021844-0.511506}" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find dummy_piper_ROS2_description)/meshes/piper_left_L_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="Revolute 1" type="revolute">
+  <origin xyz="0.0 0.0 0.0815" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link1_v1_1"/>
+  <axis xyz="-0.0 0.0 1.0"/>
+  <limit upper="3.054326" lower="-2.96706" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 2" type="revolute">
+  <origin xyz="-0.011639 0.034477 0.0285" rpy="0 0 0"/>
+  <parent link="link1_v1_1"/>
+  <child link="link2_3_v4_1"/>
+  <axis xyz="1.0 0.0 0.0"/>
+  <limit upper="1.308997" lower="-1.745329" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 3" type="revolute">
+  <origin xyz="0.03565 0.0 0.168" rpy="0 0 0"/>
+  <parent link="link2_3_v4_1"/>
+  <child link="link4_v3_1"/>
+  <axis xyz="1.0 -0.0 0.0"/>
+  <limit upper="1.396263" lower="-1.570796" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 4" type="revolute">
+  <origin xyz="-0.013162 0.001043 0.062467" rpy="0 0 0"/>
+  <parent link="link4_v3_1"/>
+  <child link="link5_v3_1"/>
+  <axis xyz="-0.0 1.0 0.0"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 5" type="revolute">
+  <origin xyz="0.0223 0.11 0.0" rpy="0 0 0"/>
+  <parent link="link5_v3_1"/>
+  <child link="link6_v3_1"/>
+  <axis xyz="1.0 0.0 0.0"/>
+  <limit upper="1.919862" lower="-1.745329" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 6" type="revolute">
+  <origin xyz="-0.21 0.005 -0.1575" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link1_L_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+  <limit upper="2.617994" lower="-2.617994" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 7" type="revolute">
+  <origin xyz="0.0 0.0 -0.043" rpy="0 0 0"/>
+  <parent link="link1_L_1"/>
+  <child link="link2_L_1"/>
+  <axis xyz="1.0 0.0 0.0"/>
+  <limit upper="1.745329" lower="-1.570796" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 8" type="revolute">
+  <origin xyz="0.0 -0.002214 -0.285039" rpy="0 0 0"/>
+  <parent link="link2_L_1"/>
+  <child link="link3_L_1"/>
+  <axis xyz="-1.0 -0.0 0.0"/>
+  <limit upper="1.570796" lower="-1.396263" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 9" type="revolute">
+  <origin xyz="0.003612 0.169667 -0.024159" rpy="0 0 0"/>
+  <parent link="link3_L_1"/>
+  <child link="link4_L_1"/>
+  <axis xyz="0.014774 -0.999887 0.002903"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 10" type="revolute">
+  <origin xyz="-0.023613 0.075159 -0.000218" rpy="0 0 0"/>
+  <parent link="link4_L_1"/>
+  <child link="link5_L_1"/>
+  <axis xyz="-0.999891 -0.014774 4.3e-05"/>
+  <limit upper="1.308997" lower="-1.308997" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 11" type="revolute">
+  <origin xyz="0.02257 0.091343 -0.000265" rpy="0 0 0"/>
+  <parent link="link5_L_1"/>
+  <child link="link6_L_1"/>
+  <axis xyz="-0.014774 0.999887 -0.002903"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Rigid 12" type="fixed">
+  <origin xyz="-0.000798 0.053993 -0.000157" rpy="0 0 0"/>
+  <parent link="link6_L_1"/>
+  <child link="piper_hand_L_1"/>
+</joint>
+
+<joint name="Revolute 13" type="revolute">
+  <origin xyz="0.188149 0.005 -0.1575" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link1_R_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+  <limit upper="2.617994" lower="-2.617994" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 14" type="revolute">
+  <origin xyz="0.0 0.0 -0.043" rpy="0 0 0"/>
+  <parent link="link1_R_1"/>
+  <child link="link2_R_1"/>
+  <axis xyz="1.0 -0.0 -0.0"/>
+  <limit upper="1.745329" lower="-1.570796" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 15" type="revolute">
+  <origin xyz="0.0 -0.002214 -0.285039" rpy="0 0 0"/>
+  <parent link="link2_R_1"/>
+  <child link="link3_R_1"/>
+  <axis xyz="1.0 -0.0 -0.0"/>
+  <limit upper="1.396263" lower="-1.570796" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 16" type="revolute">
+  <origin xyz="0.003612 0.169667 -0.024159" rpy="0 0 0"/>
+  <parent link="link3_R_1"/>
+  <child link="link4_R_1"/>
+  <axis xyz="0.014774 -0.999887 0.002903"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 17" type="revolute">
+  <origin xyz="-0.023613 0.075159 -0.000218" rpy="0 0 0"/>
+  <parent link="link4_R_1"/>
+  <child link="link5_R_1"/>
+  <axis xyz="-0.999891 -0.014774 4.3e-05"/>
+  <limit upper="1.308997" lower="-1.308997" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Revolute 18" type="revolute">
+  <origin xyz="0.02257 0.091343 -0.000265" rpy="0 0 0"/>
+  <parent link="link5_R_1"/>
+  <child link="link6_R_1"/>
+  <axis xyz="-0.014774 0.999887 -0.002903"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Rigid 19" type="fixed">
+  <origin xyz="-0.000798 0.053993 -0.000157" rpy="0 0 0"/>
+  <parent link="link6_R_1"/>
+  <child link="piper_hand_R_1"/>
+</joint>
+
+<joint name="Slider 20" type="prismatic">
+  <origin xyz="${0} ${0} ${0}" rpy="0 0 0"/>
+  <parent link="piper_hand_R_1"/>
+  <child link="piper_left_R_1"/>
+  <axis xyz="0.999891 0.014774 -4.3e-05"/>
+  <limit upper="0.035" lower="0.005" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Slider 21" type="prismatic">
+  <origin xyz="${0} ${0} ${0}" rpy="0 0 0"/>
+  <parent link="piper_hand_R_1"/>
+  <child link="piper_right_R_1"/>
+  <axis xyz="-0.999891 -0.014774 4.3e-05"/>
+  <limit upper="0.035" lower="0.005" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Slider 22" type="prismatic">
+  <origin xyz="${0} ${0} ${0}" rpy="0 0 0"/>
+  <parent link="piper_hand_L_1"/>
+  <child link="piper_right_L_1"/>
+  <axis xyz="-0.999891 -0.014774 4.3e-05"/>
+  <limit upper="0.035" lower="0.005" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Slider 23" type="prismatic">
+  <origin xyz="${0} ${0} ${0}" rpy="0 0 0"/>
+  <parent link="piper_hand_L_1"/>
+  <child link="piper_left_L_1"/>
+  <axis xyz="0.999891 0.014774 -4.3e-05"/>
+  <limit upper="0.035" lower="0.005" effort="100" velocity="100"/>
+</joint>
+
+</robot>

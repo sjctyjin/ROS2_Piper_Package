@@ -1,0 +1,204 @@
+<?xml version="1.0" ?>
+<robot name="zyx_R_1" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find scout_description)/urdf_zyx/materials.xacro" />
+<xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.trans" />
+<xacro:include filename="$(find scout_description)/urdf_zyx/zyx_R_1.gazebo" />
+<link name="zyx_R_1_base_link">
+  <inertial>
+    <origin xyz="-0.3220726835742299 0.14162213385397923 0.17560041607245772" rpy="0 0 0"/>
+    <mass value="82.41132467822133"/>
+    <inertia ixx="5.465986" iyy="9.382569" izz="9.673677" ixy="0.595286" iyz="-0.367951" ixz="0.396637"/>
+  </inertial>
+  <visual>
+  <!--
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find scout_description)/meshes_zyx/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+    -->
+    
+     <origin xyz="-0.815 0.41 -0.075" rpy="0 0 -1.57"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/base_link__.STL" scale="0.001 0.001 0.001"/>
+      
+    </geometry>
+    <material name="silver">
+    <color rgba="0.6 0.6 0.6 1" /> <!-- 藍色，不透明 -->
+    </material>
+    
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link_1_1">
+  <inertial>
+    <origin xyz="0.018305397508811626 0.2990915544595338 0.01572840939330869" rpy="0 0 0"/>
+    <mass value="14.049735398354727"/>
+    <inertia ixx="0.569191" iyy="0.018202" izz="0.57279" ixy="-0.041278" iyz="-0.011092" ixz="-0.003168"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.010176 0.0225 -0.2246" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.010176 0.0225 -0.2246" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link_2_1">
+  <inertial>
+    <origin xyz="0.020220204699360936 -2.498001805406602e-16 0.049297247699750135" rpy="0 0 0"/>
+    <mass value="10.426963884370616"/>
+    <inertia ixx="0.008163" iyy="0.34133" izz="0.33737" ixy="0.0" iyz="-0.0" ixz="0.021917"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.054176 -0.16 -0.2471" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_2_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.054176 -0.16 -0.2471" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_2_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link3_1_v1_1">
+  <inertial>
+    <origin xyz="-0.00012517233453326893 -0.019171495316296944 -0.0020963487811583303" rpy="0 0 0"/>
+    <mass value="2.105522801467846"/>
+    <inertia ixx="0.003042" iyy="0.003146" izz="0.002483" ixy="1e-06" iyz="-0.000209" ixz="-8e-06"/>
+  </inertial>
+  <visual>
+    <!-- <origin xyz="-0.236078 -0.16 -0.30849" rpy="0 0 0"/> -->
+    <origin xyz="-0.04 -0.4815 -0.109" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link3_1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.236078 -0.16 -0.30849" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link3_1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link_4_1_1_v1_1">
+  <inertial>
+    <origin xyz="0.1128029431402332 1.1788164581000293e-06 0.0210443576268719" rpy="0 0 0"/>
+    <mass value="7.53800333309141"/>
+    <inertia ixx="0.006395" iyy="0.203266" izz="0.205408" ixy="-3e-06" iyz="0.0" ixz="0.009545"/>
+  </inertial>
+  <visual>
+    <origin xyz="-0.236531 -0.106255 -0.339987" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_4_1_1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.236531 -0.106255 -0.339987" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_4_1_1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link5_1_v1_1">
+  <inertial>
+    <origin xyz="-0.3205915490146294 2.0541989703207197e-05 0.1922593047304892" rpy="0 0 0"/>
+    <mass value="0.17219120640966834"/>
+    <inertia ixx="-0.003627" iyy="-0.026273" izz="-0.021532" ixy="-1e-06" iyz="0.0" ixz="-0.011419"/>
+  </inertial>
+  <visual>
+
+      <origin xyz="0.05 0.00 0" rpy="3.14 0 1.57"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link_5.dae" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="-0.646521 -0.106255 -0.371094" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/link5_1_v1_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="Livox_mid_360">
+  <visual>
+    <origin xyz="0 0 0.02" rpy="1.57 0 3.14"/>
+    <geometry>
+      <mesh filename="package://scout_description/meshes_zyx/mid-360-asm.dae" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+</link>
+
+<joint name="lidar_joint" type="fixed">
+  <origin xyz="-0.76 0.160 0.565" rpy="0 0 0"/>
+  <parent link="zyx_R_1_base_link"/>
+  <child link="Livox_mid_360"/>
+</joint>
+
+
+<joint name="Z" type="prismatic">
+  <origin xyz="0.010176 -0.0225 0.12" rpy="0 0 0"/>
+  <parent link="zyx_R_1_base_link"/>
+  <child link="link_1_1"/>
+  <axis xyz="0.0 -0.0 1.0"/>
+  <limit upper="0.3" lower="0" effort="100" velocity="100"/>
+</joint>
+
+<joint name="Y" type="prismatic">
+  <origin xyz="0.044 0.08 0.0225" rpy="0 0 0"/>
+  <parent link="link_1_1"/>
+  <child link="link_2_1"/>
+  <axis xyz="0.0 -1.0 -0.0"/>
+  <limit upper="-0.2" lower="0" effort="100" velocity="100"/>
+</joint>
+
+<joint name="X" type="prismatic">
+  <origin xyz="0.06 0.0 0.06139" rpy="0 0 0"/>
+  <parent link="link_2_1"/>
+  <child link="link3_1_v1_1"/>
+  <axis xyz="1 0.0 -0.014382"/>
+  <limit upper="0.3" lower="0" effort="100" velocity="100"/>
+</joint>
+
+<joint name="R" type="revolute">
+  <origin xyz="0.000453 -0.053745 0.031497" rpy="0 0 0"/>
+  <parent link="link3_1_v1_1"/>
+  <child link="link_4_1_1_v1_1"/>
+  <axis xyz="0.014382 -0.0 0.999897"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+<joint name="G" type="revolute">
+  <origin xyz="0.40999 0.0 0.031107" rpy="0 0 0"/>
+  <parent link="link_4_1_1_v1_1"/>
+  <child link="link5_1_v1_1"/>
+  <axis xyz="0.999897 -0.0 -0.014382"/>
+  <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+</joint>
+
+</robot>
