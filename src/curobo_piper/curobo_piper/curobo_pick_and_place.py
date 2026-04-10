@@ -287,8 +287,10 @@ class PickAndPlaceNode(Node):
             if self.current_state == self.STATE_IDLE:
                 # 查找目标TF变换
                 try:
+                    #tf = self.tf_buffer.lookup_transform(
+                    #    'base_link', 'object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
                     tf = self.tf_buffer.lookup_transform(
-                        'base_link', 'object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
+                        'base_link', 'camera_object_frame', rclpy.time.Time(), timeout=Duration(seconds=1.0))
                     # ✅ 插入這段檢查 TF 是否新鮮
                     now = self.get_clock().now()
                     tf_time = tf.header.stamp

@@ -7,7 +7,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.actions import IncludeLaunchDescription  # Correct import method
 from launch_ros.actions import Node  # Remains unchanged
 from ament_index_python.packages import get_package_share_directory
-
+from launch_ros.substitutions import FindPackageShare
 import os
 
 
@@ -72,6 +72,29 @@ def generate_launch_description():
             ('joint_ctrl_single', '/joint_states')
         ]
     )
+    
+    realsense_launch_dir = os.path.join(
+        FindPackageShare('realsense2_camera').find('realsense2_camera'),
+        'launch',
+    )
+    
+    cam_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            realsense_launch_dir, '/rs_launch.py'
+        ]),
+        launch_arguments={
+            'pointcloud.enable': 'true',
+            'align_depth.enable': 'true',
+        }.items()
+    )
+    # 啟動偵測
+    
+    cam1_yolo = Node(
+        package='transform_example',
+        executable='yolov8_detect_SAM',
+        name='cam1_yolo',
+        output='screen'
+    )
 
     # Return the LaunchDescription object containing all the above elements
     return LaunchDescription([
@@ -80,5 +103,7 @@ def generate_launch_description():
         display_xacro_launch,
         gripper_exist_arg,
         gripper_val_mutiple_arg,
-        piper_ctrl_node
+        piper_ctrl_node,
+        cam_node,
+        cam1_yolo
     ])

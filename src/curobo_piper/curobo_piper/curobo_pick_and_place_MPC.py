@@ -201,9 +201,11 @@ class PickAndPlaceNode(Node):
         # 为joint7(夹爪)设置值
         positions_with_gripper = list(joint_positions)       
         positions_with_gripper[6] = gripper_value  # joint7是夹爪
-        msg.position = positions_with_gripper
+        #msg.position = positions_with_gripper
+        msg.position = [float(v) for v in positions_with_gripper]
+
         #self.get_logger().info(f"joint_positions直－－－－－ ：{positions_with_gripper}")
-        msg.velocity = [10] * len(self.joint_names)
+        msg.velocity = [10.0] * len(self.joint_names)
         # 发布到ROS2
         self.publisher.publish(msg)
         #self.get_logger().info(f"夾爪直－－－－－ ：{gripper_value}")
@@ -380,7 +382,7 @@ class PickAndPlaceNode(Node):
                 # 查找目标TF变换
                 try:
                     tf = self.tf_buffer.lookup_transform(
-                        'base_link', 'object_in_base', rclpy.time.Time(), timeout=Duration(seconds=1.0))
+                        'base_link', 'camera_object_frame', rclpy.time.Time(), timeout=Duration(seconds=1.0))
                     # ✅ 插入這段檢查 TF 是否新鮮
                     now = self.get_clock().now()
                     tf_time = tf.header.stamp
