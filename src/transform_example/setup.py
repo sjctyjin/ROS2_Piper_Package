@@ -42,6 +42,7 @@ setup(
 	     # 控制關 : ros2 service call /close_gripper std_srvs/srv/Trigger
 	     'tf_web_publisher = transform_example.tf_web_publisher:main',#座標轉換
 	     'yolov8_detect_SAM = transform_example.yolov8_point_mobileSAM:main',#MobileSAM
+             'realsense_hsv_tuner = transform_example.realsense_hsv_tuner:main',
 	     
         ],
     },

@@ -30,12 +30,12 @@ class CameraYoloProcessor(Node):
         
         # HSV 參數設定（可調整）
         self.h_low1 = 0
-        self.h_high1 = 24
-        self.s_low = 170
+        self.h_high1 = 51
+        self.s_low = 160
         self.v_low = 70
         self.min_area = 200
         self.max_area = 200000
-        self.expand = 6
+        self.expand = 9
 
         # 根據 namespace 組合話題
         if self.namespace  == "cam3":
@@ -64,7 +64,11 @@ class CameraYoloProcessor(Node):
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
         # TF2 Buffer 和 Listener
         self.tf_buffer = tf2_ros.Buffer()
-        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self.tf_listener = tf2_ros.TransformListener(
+            self.tf_buffer,
+            self,
+            spin_thread=True,
+        )
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
         self.hand = "None"
         if self.namespace == "cam1":
@@ -273,11 +277,14 @@ class CameraYoloProcessor(Node):
                     rotation_quaternion = [0, 0, 0, 1]  # 單位四元數
                     
                     if self.namespace != "cam3":
-                        if depth > 0.4:
+                        if depth > 0.8:
                             self.get_logger().warning('超出距離')
                             display()
                             return
-                    
+                    if depth > 0.8:
+                        self.get_logger().warning('超出距離')
+                        display()
+                        return
                     # 廣播到 TF
                     self.broadcast_tf(xyz_camera, rotation_quaternion, self.object_frame)
                     self.last_detection_time = self.get_clock().now()
