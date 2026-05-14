@@ -9,6 +9,7 @@ import time
 import threading
 import argparse
 import math
+import numpy as np
 from piper_sdk import *
 from piper_sdk import C_PiperInterface
 from piper_msgs.msg import PiperStatusMsg, PosCmd
@@ -28,17 +29,56 @@ class PiperRosNode(Node):
         self.declare_parameter('auto_enable', False)
         self.declare_parameter('gripper_exist', True)
         self.declare_parameter('gripper_val_mutiple', 1)
+        self.declare_parameter('joint_smoothing_enabled', True)
+        self.declare_parameter('joint_smoothing_rate_hz', 200.0)
+        self.declare_parameter('joint_smoothing_kp', 10.0)
+        self.declare_parameter('joint_smoothing_max_vel_deg_s', [90.0, 90.0, 100.0, 130.0, 130.0, 180.0])
+        self.declare_parameter('joint_smoothing_max_acc_deg_s2', [360.0, 360.0, 420.0, 540.0, 540.0, 720.0])
+        self.declare_parameter('joint_smoothing_deadband_deg', [0.05, 0.05, 0.06, 0.08, 0.08, 0.10])
+        self.declare_parameter('joint_smoothing_motion_speed', 50)
+        self.declare_parameter('gripper_smoothing_max_step', 2500)
 
         self.can_port = self.get_parameter('can_port').get_parameter_value().string_value
         self.auto_enable = self.get_parameter('auto_enable').get_parameter_value().bool_value
         self.gripper_exist = self.get_parameter('gripper_exist').get_parameter_value().bool_value
         self.gripper_val_mutiple = self.get_parameter('gripper_val_mutiple').get_parameter_value().integer_value
         self.gripper_val_mutiple = max(0, min(self.gripper_val_mutiple, 10))
+        self.joint_smoothing_enabled = self.get_parameter('joint_smoothing_enabled').value
+        self.joint_smoothing_rate_hz = float(self.get_parameter('joint_smoothing_rate_hz').value)
+        self.joint_smoothing_kp = float(self.get_parameter('joint_smoothing_kp').value)
+        self.joint_smoothing_max_vel = np.deg2rad(
+            self.get_float_array_parameter(
+                'joint_smoothing_max_vel_deg_s',
+                [90.0, 90.0, 100.0, 130.0, 130.0, 180.0],
+            )
+        )
+        self.joint_smoothing_max_acc = np.deg2rad(
+            self.get_float_array_parameter(
+                'joint_smoothing_max_acc_deg_s2',
+                [360.0, 360.0, 420.0, 540.0, 540.0, 720.0],
+            )
+        )
+        self.joint_smoothing_deadband = np.deg2rad(
+            self.get_float_array_parameter(
+                'joint_smoothing_deadband_deg',
+                [0.05, 0.05, 0.06, 0.08, 0.08, 0.10],
+            )
+        )
+        self.joint_smoothing_motion_speed = int(self.get_parameter('joint_smoothing_motion_speed').value)
+        self.joint_smoothing_motion_speed = int(clip(self.joint_smoothing_motion_speed, 1, 100))
+        self.gripper_smoothing_max_step = int(self.get_parameter('gripper_smoothing_max_step').value)
+        self.gripper_smoothing_max_step = max(1, self.gripper_smoothing_max_step)
 
         self.get_logger().info(f"can_port is {self.can_port}")
         self.get_logger().info(f"auto_enable is {self.auto_enable}")
         self.get_logger().info(f"gripper_exist is {self.gripper_exist}")
         self.get_logger().info(f"gripper_val_mutiple is {self.gripper_val_mutiple}")
+        self.get_logger().info(f"joint_smoothing_enabled is {self.joint_smoothing_enabled}")
+        if self.joint_smoothing_enabled:
+            self.get_logger().info(
+                f"joint smoothing servo: {self.joint_smoothing_rate_hz:.1f} Hz, "
+                f"kp={self.joint_smoothing_kp:.2f}, speed={self.joint_smoothing_motion_speed}"
+            )
         # Publishers
         self.joint_pub = self.create_publisher(JointState, 'joint_states_single', 1)
         self.joint_ctrl_pub = self.create_publisher(JointState, 'joint_ctrl', 1)
@@ -60,6 +100,15 @@ class PiperRosNode(Node):
         self.joint_ctrl.effort = [0.0] * 7
         # Enable flag
         self.__enable_flag = False
+        self.command_lock = threading.Lock()
+        self.joint_servo_lock = threading.Lock()
+        self.joint_servo_target = None
+        self.joint_servo_q = None
+        self.joint_servo_v = np.zeros(6, dtype=np.float64)
+        self.gripper_servo_target = 0
+        self.gripper_servo_value = 0
+        self.gripper_servo_effort = 1000
+        self.joint_servo_running = True
         # Create piper class and open CAN interface
         self.piper = C_PiperInterface(can_name=self.can_port)
         self.piper.ConnectPort()
@@ -71,9 +120,172 @@ class PiperRosNode(Node):
 
         self.publisher_thread = threading.Thread(target=self.publish_thread)
         self.publisher_thread.start()
+        self.joint_servo_thread = threading.Thread(target=self.joint_servo_loop, daemon=True)
+        self.joint_servo_thread.start()
 
     def GetEnableFlag(self):
         return self.__enable_flag
+
+    def get_float_array_parameter(self, name, default):
+        value = self.get_parameter(name).value
+        if value is None:
+            return np.array(default, dtype=np.float64)
+        values = list(value)
+        if len(values) != 6:
+            self.get_logger().warn(
+                f"{name} should contain 6 values, got {len(values)}. Using default."
+            )
+            values = default
+        return np.array(values, dtype=np.float64)
+
+    def get_current_arm_joint_positions(self):
+        raw_to_rad = math.pi / 180000.0
+        try:
+            joint_state = self.piper.GetArmJointMsgs().joint_state
+            return np.array(
+                [
+                    joint_state.joint_1,
+                    joint_state.joint_2,
+                    joint_state.joint_3,
+                    joint_state.joint_4,
+                    joint_state.joint_5,
+                    joint_state.joint_6,
+                ],
+                dtype=np.float64,
+            ) * raw_to_rad
+        except Exception:
+            return None
+
+    def get_current_gripper_raw(self):
+        try:
+            return int(abs(self.piper.GetArmGripperMsgs().gripper_state.grippers_angle))
+        except Exception:
+            return 0
+
+    def parse_joint_command(self, joint_data):
+        target = np.zeros(6, dtype=np.float64)
+        for idx, joint_name in enumerate(joint_data.name):
+            if idx >= len(joint_data.position):
+                continue
+            if joint_name.startswith('joint'):
+                try:
+                    joint_idx = int(joint_name.replace('joint', '')) - 1
+                except ValueError:
+                    continue
+                if 0 <= joint_idx < 6:
+                    target[joint_idx] = float(joint_data.position[idx])
+
+        gripper_raw = 0
+        if len(joint_data.position) >= 7:
+            gripper_raw = int(abs(round(joint_data.position[6] * 1000 * 1000)))
+            gripper_raw = gripper_raw * self.gripper_val_mutiple
+
+        gripper_effort = 1000
+        if len(joint_data.effort) >= 7:
+            effort = clip(joint_data.effort[6], 0.5, 3)
+            if not math.isnan(effort):
+                gripper_effort = int(round(effort * 1000))
+
+        return target, gripper_raw, gripper_effort
+
+    def sdk_trajectory_step(self, q, v, target, dt):
+        err = target - q
+        v_des = np.clip(
+            self.joint_smoothing_kp * err,
+            -self.joint_smoothing_max_vel,
+            self.joint_smoothing_max_vel,
+        )
+        dv = np.clip(
+            v_des - v,
+            -self.joint_smoothing_max_acc * dt,
+            self.joint_smoothing_max_acc * dt,
+        )
+        v_new = v + dv
+        q_new = q + v_new * dt
+
+        overshoot = (target - q) * (target - q_new) <= 0.0
+        settled = (
+            (np.abs(target - q_new) <= self.joint_smoothing_deadband)
+            & (np.abs(v_new) <= np.deg2rad(1.0))
+        )
+        snap = overshoot | settled
+        q_new = np.where(snap, target, q_new)
+        v_new = np.where(snap, 0.0, v_new)
+        return q_new, v_new
+
+    def send_joint_raw_command(self, joints_rad, gripper_raw, gripper_effort, speed=None):
+        factor = 180000.0 / math.pi
+        q_raw = np.round(np.asarray(joints_rad, dtype=np.float64) * factor).astype(int)
+        motion_speed = self.joint_smoothing_motion_speed if speed is None else int(clip(speed, 1, 100))
+        with self.command_lock:
+            self.piper.MotionCtrl_2(0x01, 0x01, motion_speed)
+            self.piper.JointCtrl(
+                int(q_raw[0]),
+                int(q_raw[1]),
+                int(q_raw[2]),
+                int(q_raw[3]),
+                int(q_raw[4]),
+                int(q_raw[5]),
+            )
+            if self.gripper_exist:
+                self.piper.GripperCtrl(abs(int(gripper_raw)), int(gripper_effort), 0x01, 0)
+
+    def joint_servo_loop(self):
+        period = 1.0 / max(1.0, self.joint_smoothing_rate_hz)
+        last_tick = time.time()
+
+        while self.joint_servo_running and rclpy.ok():
+            time.sleep(period)
+            self.joint_smoothing_enabled = bool(self.get_parameter('joint_smoothing_enabled').value)
+            if not self.joint_smoothing_enabled or not self.GetEnableFlag():
+                with self.joint_servo_lock:
+                    self.joint_servo_q = None
+                    self.joint_servo_v = np.zeros(6, dtype=np.float64)
+                last_tick = time.time()
+                continue
+
+            with self.joint_servo_lock:
+                if self.joint_servo_target is None:
+                    last_tick = time.time()
+                    continue
+
+                target = self.joint_servo_target.copy()
+                target_gripper = int(self.gripper_servo_target)
+                target_effort = int(self.gripper_servo_effort)
+
+                if self.joint_servo_q is None:
+                    current_q = self.get_current_arm_joint_positions()
+                    self.joint_servo_q = current_q if current_q is not None else target.copy()
+                    self.joint_servo_v = np.zeros(6, dtype=np.float64)
+                    self.gripper_servo_value = self.get_current_gripper_raw()
+
+                now = time.time()
+                dt = max(1e-3, now - last_tick)
+                last_tick = now
+
+                q_next, v_next = self.sdk_trajectory_step(
+                    self.joint_servo_q,
+                    self.joint_servo_v,
+                    target,
+                    dt,
+                )
+                gripper_delta = int(
+                    clip(
+                        target_gripper - self.gripper_servo_value,
+                        -self.gripper_smoothing_max_step,
+                        self.gripper_smoothing_max_step,
+                    )
+                )
+                self.gripper_servo_value += gripper_delta
+                self.joint_servo_q = q_next
+                self.joint_servo_v = v_next
+                command_q = q_next.copy()
+                command_gripper = int(self.gripper_servo_value)
+
+            try:
+                self.send_joint_raw_command(command_q, command_gripper, target_effort)
+            except Exception as exc:
+                self.get_logger().warn(f"Joint smoothing command failed: {exc}")
 
     def publish_thread(self):
         """Publish messages from the robotic arm
@@ -248,6 +460,15 @@ class PiperRosNode(Node):
         Args:
             joint_data (): The joint data
         """
+        self.joint_smoothing_enabled = bool(self.get_parameter('joint_smoothing_enabled').value)
+        if self.joint_smoothing_enabled:
+            target, gripper_raw, gripper_effort = self.parse_joint_command(joint_data)
+            with self.joint_servo_lock:
+                self.joint_servo_target = target
+                self.gripper_servo_target = gripper_raw
+                self.gripper_servo_effort = gripper_effort
+            return
+
         factor = 57324.840764  # 1000*180/3.14
         # self.get_logger().info(f"Received Joint States:")
 
@@ -389,5 +610,8 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        piper_single_node.joint_servo_running = False
+        if hasattr(piper_single_node, 'joint_servo_thread'):
+            piper_single_node.joint_servo_thread.join(timeout=0.5)
         piper_single_node.destroy_node()
         rclpy.shutdown()
